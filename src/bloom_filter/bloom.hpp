@@ -1,7 +1,7 @@
 #ifndef BLOOM_H
 #define BLOOM_H
 
-
+#include "../utils/types.hpp"
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
 
 class bloom_filter {
@@ -12,16 +12,16 @@ class bloom_filter {
 
         ~bloom_filter();
 
-        void set(u_int64_t);
+        void set(KEY_t);
 
-        bool is_set(u_int64_t) const;
+        bool is_set(KEY_t) const;
 
     private:
-        u_int64_t hash_1(u_int64_t) const;
+        uint64_t hash_1(uint64_t) const;
 
-        u_int64_t hash_2(u_int64_t) const;
+        uint64_t hash_2(uint64_t) const;
 
-        u_int64_t hash_3(u_int64_t) const;
+        uint64_t hash_3(uint64_t) const;
 };
 
 #endif //BLOOM_H
