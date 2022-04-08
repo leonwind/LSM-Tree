@@ -2,9 +2,10 @@
 #define RED_BLACK_H
 
 #include "node.hpp"
-#include "../utils/types.hpp"
+#include "../types.hpp"
 
 class red_black_tree {
+
     public:
         red_black_tree();
 
@@ -14,13 +15,12 @@ class red_black_tree {
 
         void remove(entry pair);
 
-        bool contains(entry pair);
+        bool exists(entry pair);
 
         void print();
 
     private:
         node* root;
-
 };
 
 #endif // RED_BLACK_H

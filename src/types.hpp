@@ -1,11 +1,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#include <stdint.h>
-
-typedef int32_t KEY_t;
-typedef int32_t VAL_t;
-
+#include <string>
 #define KEY_MAX 2147483647
 #define KEY_MIN -2147483648
 
@@ -13,8 +9,8 @@ typedef int32_t VAL_t;
 #define VAL_MIN -2147483647
 
 struct entry {
-    KEY_t key;
-    VAL_t val;
+    std::string key;
+    std::string val;
 
     bool operator==(const entry& other) const {return key == other.key;}
     bool operator<(const entry& other) const {return key < other.key;}

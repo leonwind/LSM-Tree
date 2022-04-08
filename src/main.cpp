@@ -4,8 +4,12 @@
 int main() {
     bloom_filter bloom(100);
 
-    bloom.set(10);
-    std::cout << bloom.is_set(10) << std::endl;
+    bloom.set("test");
+    std::cout << bloom.is_set("test") << std::endl;
+    std::cout << bloom.is_set("non test") << std::endl;
+
+    bloom.set("non test");
+    std::cout << bloom.is_set("non test") << std::endl;
 
     return 0;
 }

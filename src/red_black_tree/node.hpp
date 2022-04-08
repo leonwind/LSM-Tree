@@ -1,20 +1,21 @@
 #ifndef NODE_H
 #define NODE_H 
 
-#include "../utils/types.hpp"
+#include "../types.hpp"
 #include <string>
 #include <vector>
 
-#define RED "RED"
-#define BLACK "BLACK"
-#define NIL "NIL"
 
 class node {
+    enum colors {RED, BLACK};
+    
     public:
         entry pair;
-        std::string color;
+        colors color;
+
         node* left;
         node* right;
+        node* parent;
 
         node(entry pair);
 
@@ -22,13 +23,22 @@ class node {
 
         void remove(entry target);
 
-        bool contains(entry target);
+        bool exists(entry target) const;
 
-        std::vector<entry> inorder();
+        std::vector<entry> inorder() const;
 
         void delete_tree(); 
 
     private:
+        void bst_insertion(entry new_pair);
+
+        void fix_violations();
+
+        void rotate_left();
+
+        void rotate_right();
+
+        void recolor();
 };
 
 #endif // NODE_H
