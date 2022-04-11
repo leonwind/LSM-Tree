@@ -11,13 +11,13 @@ class red_black_tree {
 
         ~red_black_tree();
 
-        void insert(entry pair);
+        void insert(entry new_pair);
 
-        void remove(entry pair);
+        void remove(entry target);
 
-        bool exists(entry pair);
+        bool exists(entry target) const;
 
-        void print();
+        void print() const;
 
     private:
         node* root;

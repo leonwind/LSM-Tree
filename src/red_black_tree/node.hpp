@@ -17,7 +17,7 @@ class node {
         node* right;
         node* parent;
 
-        node(entry pair);
+        node(entry pair, bool is_root);
 
         void insert(entry new_pair);
 
@@ -25,20 +25,26 @@ class node {
 
         bool exists(entry target) const;
 
-        std::vector<entry> inorder() const;
+        std::vector<entry> get_all_nodes() const;
 
         void delete_tree(); 
 
-    private:
-        void bst_insertion(entry new_pair);
+        void print_2d(int space) const;
 
-        void fix_violations();
+        std::string to_str() const;
+
+    private:
+        node* bst_insertion(entry new_pair);
+
+        void fix_insert();
+
+        void fix_remove();
 
         void rotate_left();
 
         void rotate_right();
 
-        void recolor();
+        void print_seperator();
 };
 
 #endif // NODE_H
