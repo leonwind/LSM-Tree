@@ -17,11 +17,16 @@ void red_black_tree::insert(entry new_pair) {
 }
 
 void red_black_tree::remove(entry target) {
-
+    if (root != NULL) {
+        root->remove(target);
+    }
 }
 
 bool red_black_tree::exists(entry target) const {
-    return root->exists(target);
+    if (root != NULL) {
+        return root->exists(target);
+    }
+    return false;
 }
 
 void red_black_tree::print() const {

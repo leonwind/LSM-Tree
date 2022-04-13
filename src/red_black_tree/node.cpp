@@ -14,7 +14,7 @@ node::node(entry pair, bool is_root = false) {
 }
 
 /**
- * Check if the key value pair target exists in the tree
+ * Check if the key value pair target exists in the tree.
  */
 bool node::exists(entry target) const {
     if (pair == target) {
@@ -38,17 +38,17 @@ bool node::exists(entry target) const {
  * by fixing any violated Red Black Tree invariations.
 */
 void node::insert(entry new_pair) {
-    node* inserted = bst_insertion(new_pair);
+    node* inserted = insert_node(new_pair);
     inserted->fix_insert();
     color = BLACK;
 }
 
 /**
- * Insert a new key-value pair into the red-black tree 
+ * Insert a new key-value pair into the Red Black Tree 
  * using a standard binary search tree insertion.
  * Return a pointer to inserted node.
  */
-node* node::bst_insertion(entry new_pair) {
+node* node::insert_node(entry new_pair) {
     if (new_pair == pair) {
         pair = new_pair;
         return this;
@@ -61,7 +61,7 @@ node* node::bst_insertion(entry new_pair) {
             left = left_child;
             return left_child;
         } else {
-            return left->bst_insertion(new_pair);
+            return left->insert_node(new_pair);
         }
     } else {
         if (right == NULL) {
@@ -70,7 +70,7 @@ node* node::bst_insertion(entry new_pair) {
             right = right_child;
             return right_child;
         } else {
-            return right->bst_insertion(new_pair);
+            return right->insert_node(new_pair);
         }
     }
 }
@@ -124,12 +124,62 @@ void node::fix_insert() {
 }
 
 /**
- * Remove a key vlaue pair in the tree.
+ * Remove a key value pair in the tree.
  * Run first a normal bst removal and then fix the tree
  * by fixing any violated Red Black Tree invariations.
 */
 void node::remove(entry target) {
+    node* node = remove_node(target);
+    if (node != NULL) {
+        node->fix_remove();
+    }
+}
 
+/**
+ * Delete target from the Red Black Tree using normal bst removal.
+ * Find the node and then replace it with its inorder successor and remove it since
+ * it must be a leaf.
+ */
+node* node::remove_node(entry target) {
+    if (target < pair && left != NULL) {
+        left = left->remove_node(target);
+        return this;
+    } else if (target > pair && right != NULL) {
+        right = right->remove_node(target);
+        return this;
+    }
+
+    if (target == pair) {
+        // this has both children
+        if (left != NULL && right != NULL) {
+            node* next_greater = right->find_min();
+            pair = next_greater->pair;
+            right = right->remove_node(next_greater->pair);
+            return this;
+        }
+
+        // this has only left child
+        if (left != NULL) {
+            node* tmp = left;
+            tmp->parent = parent;
+            delete this;
+            return tmp;
+        }
+
+        // this has only right child
+        if (right != NULL) {
+            node* tmp = right;
+            tmp->parent = parent;
+            delete this;
+            return tmp;
+        }
+
+        // this has no children (is a leaf)
+        delete this;
+        return NULL;
+    }
+
+    return NULL;
 }
 
 /**
@@ -138,7 +188,6 @@ void node::remove(entry target) {
  * 
  */
 void node::fix_remove() {
-
 }
 
 /**
@@ -147,6 +196,19 @@ void node::fix_remove() {
 std::vector<entry> node::get_all_nodes() const {
     std::vector<entry> nodes;
     return nodes;
+}
+
+/*
+ * Find the minimum node in the tree / the inorder successor of this.
+ */
+node* node::find_min() {
+    node* tmp = this;
+    
+    while (tmp->left != NULL) {
+        tmp = tmp->left;
+    } 
+
+    return tmp;
 }
 
 /**

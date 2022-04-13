@@ -31,6 +31,11 @@ void test_red_black_tree() {
     rb_tree.insert({"99", ""});
     rb_tree.insert({"11", ""});
     rb_tree.print();
+
+    std::cout << "------" << std::endl;
+
+    rb_tree.remove({"2", ""});
+    rb_tree.print();
 }
 
 int main() {

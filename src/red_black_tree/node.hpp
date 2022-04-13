@@ -34,11 +34,15 @@ class node {
         std::string to_str() const;
 
     private:
-        node* bst_insertion(entry new_pair);
+        node* insert_node(entry new_pair);
 
         void fix_insert();
 
+        node* remove_node(entry target);
+
         void fix_remove();
+
+        node* find_min();
 
         void rotate_left();
 
