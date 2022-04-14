@@ -13,23 +13,53 @@ node::node(entry pair, bool is_root = false) {
     color = is_root ? BLACK : RED;
 }
 
+node::node(node* ptr) {
+    pair = ptr->pair;
+    color = ptr->color;
+    
+    left = ptr->left;
+    if (left != NULL) {
+        left->parent = this;
+    }
+
+    right = ptr->right;
+    if (right != NULL) {
+        right->parent = this;
+    }
+
+    parent = ptr->parent;
+}
+
+void node::delete_tree() {
+    if (left != NULL) {
+        left->delete_tree();
+    } 
+
+    if (right != NULL) {
+        right->delete_tree();
+    }
+
+    delete this;
+}
+
 /**
- * Check if the key value pair target exists in the tree.
+ * Check if the key of the kv-pair exists in the tree.
+ * If so, return the node, otherwise NULL.
  */
-bool node::exists(entry target) const {
+node* node::find_node(entry target) {
     if (pair == target) {
-        return true;
+        return this;
+    }
+     
+    if (left != NULL && pair > target) {
+        return left->find_node(target);
     }
 
-    if (left != NULL && pair < target) {
-        return left->exists(target);
+    if (right != NULL && pair < target) {
+        return right->find_node(target);
     }
 
-    if (right != NULL && pair > target) {
-        return right->exists(target);
-    }
-
-    return false;
+    return NULL;
 }
 
 /**
@@ -83,12 +113,12 @@ node* node::insert_node(entry new_pair) {
 void node::fix_insert() {
     node* curr = this;
 
-    while (curr->parent != NULL && curr->parent->color == RED) {
+    while (get_color(curr->parent) == RED) {
 
         if (curr->parent == curr->parent->parent->left) {
             node* uncle = curr->parent->parent->right;
 
-            if (uncle != NULL && uncle->color == RED) {
+            if (get_color(uncle) == RED) {
                 curr->parent->color = BLACK;
                 uncle->color = BLACK;
                 curr->parent->parent->color = RED;
@@ -97,15 +127,17 @@ void node::fix_insert() {
                 if (curr == curr->parent->right) {
                     curr = curr->parent;
                     curr->rotate_left();
+                    curr = curr->left;
                 }
                 curr->parent->color = BLACK;
+
                 curr->parent->parent->color = RED;
                 curr->parent->parent->rotate_right();
             }
         } else {
             node* uncle = curr->parent->parent->left;
 
-            if (uncle != NULL && uncle->color == RED) {
+            if (get_color(uncle) == RED) {
                 curr->parent->color = BLACK;
                 uncle->color = BLACK;
                 curr->parent->parent->color = RED;
@@ -114,6 +146,7 @@ void node::fix_insert() {
                 if (curr == curr->parent->left) {
                     curr = curr->parent;
                     curr->rotate_right();
+                    curr = curr->right;
                 }
                 curr->parent->color = BLACK;
                 curr->parent->parent->color = RED;
@@ -125,69 +158,134 @@ void node::fix_insert() {
 
 /**
  * Remove a key value pair in the tree.
- * Run first a normal bst removal and then fix the tree
- * by fixing any violated Red Black Tree invariations.
+ * First do a binary search to find the node to actually delete but only return the position.
+ * Do the actual deletion while fixing the tree.
 */
 void node::remove(entry target) {
-    node* node = remove_node(target);
-    if (node != NULL) {
-        node->fix_remove();
-    }
-}
-
-/**
- * Delete target from the Red Black Tree using normal bst removal.
- * Find the node and then replace it with its inorder successor and remove it since
- * it must be a leaf.
- */
-node* node::remove_node(entry target) {
-    if (target < pair && left != NULL) {
-        left = left->remove_node(target);
-        return this;
-    } else if (target > pair && right != NULL) {
-        right = right->remove_node(target);
-        return this;
+    node* to_remove = find_node(target);
+    if (to_remove == NULL) {
+        return;
     }
 
-    if (target == pair) {
-        // this has both children
-        if (left != NULL && right != NULL) {
-            node* next_greater = right->find_min();
-            pair = next_greater->pair;
-            right = right->remove_node(next_greater->pair);
-            return this;
-        }
-
-        // this has only left child
-        if (left != NULL) {
-            node* tmp = left;
-            tmp->parent = parent;
-            delete this;
-            return tmp;
-        }
-
-        // this has only right child
-        if (right != NULL) {
-            node* tmp = right;
-            tmp->parent = parent;
-            delete this;
-            return tmp;
-        }
-
-        // this has no children (is a leaf)
-        delete this;
-        return NULL;
+    // If to_remove has both children, we swap it with its inorder successor
+    // which is a leaf and thus must have 0 or 1 children.
+    if (to_remove->left != NULL && to_remove->right != NULL) {
+        node* next_greater = to_remove->right->find_min();
+        to_remove->pair = next_greater->pair;
+        to_remove = next_greater;
     }
 
-    return NULL;
+    if (to_remove->parent == NULL) {
+        delete_tree();
+        return;
+    }
+
+    to_remove->remove_node();
+    color = BLACK;
 }
 
 /**
  * Check if all the Red Black Tree invariants still hold after a new insertion.
  * If not, fix them by rotating and recoloring the nodes.
- * 
+ * See: https://algorithmtutor.com/Data-Structures/Tree/Red-Black-Trees/
  */
-void node::fix_remove() {
+void node::remove_node() {
+    if (color == RED || get_color(left) == RED || get_color(right) == RED) {
+        node* child = (left != NULL) ? left : right;
+
+        if (this == parent->left) {
+            parent->left = child;
+        } else {
+            parent->right = child;
+        }
+        if (child != NULL) {
+            child->parent = parent;
+            child->color = BLACK;
+        }
+        delete this;
+        return;
+    }
+
+    node* sibling = NULL;
+    node* curr = this;
+    curr->color = DOUBLE_BLACK;
+
+    while (curr->parent != NULL && curr->color == DOUBLE_BLACK) {
+        if (curr == curr->parent->left) {
+            sibling = curr->parent->right;
+
+            if (get_color(sibling) == RED) {
+                sibling->color = BLACK;
+                curr->parent->color = RED;
+                curr->parent->rotate_left();
+            } else {
+                // Check for NULL of sibling->left and right??
+                if (get_color(sibling->left) == BLACK && get_color(sibling->right) == BLACK) {
+                    set_color(sibling, RED);
+                    if (get_color(curr->parent) == RED) {
+                        set_color(curr->parent, BLACK);
+                    }  else {
+                        set_color(curr->parent, DOUBLE_BLACK);
+                    }
+                    curr = curr->parent;
+                } else {
+                    if (get_color(sibling->right) == BLACK) {
+                        set_color(sibling->left, BLACK);
+                        set_color(sibling, RED);
+                        sibling->rotate_right();
+                        sibling = curr->parent->right;
+                    }
+                    set_color(sibling, curr->parent->color);
+                    set_color(curr->parent, BLACK);
+                    set_color(sibling->right, BLACK);
+                    curr->parent->rotate_left();
+                    break;
+                }
+            }
+        } else {
+            sibling = curr->parent->left;
+            if (get_color(sibling) == RED) {
+                sibling->color = BLACK;
+                curr->parent->color = RED;
+                curr->parent->rotate_left();
+            } else {
+                // Check for NULL of sibling->left and right??
+                if (get_color(sibling->left) == BLACK && get_color(sibling->right) == BLACK) {
+                    set_color(sibling, RED);
+                    if (get_color(curr->parent) == RED) {
+                        set_color(curr->parent, BLACK);
+                    }  else {
+                        set_color(curr->parent, DOUBLE_BLACK);
+                    }
+                    curr = curr->parent;
+                } else {
+                    if (get_color(sibling->left) == BLACK) {
+                        set_color(sibling->right, BLACK);
+                        set_color(sibling, RED);
+                        sibling->rotate_left();
+                        sibling = curr->parent->left;
+                    }
+                    set_color(sibling, curr->parent->color);
+                    set_color(curr->parent, BLACK);
+                    set_color(sibling->left, BLACK);
+                    curr->parent->rotate_right();
+                    break;
+                }
+            }
+        }
+    }
+
+    if (parent == NULL) {
+        delete this;
+        return;
+    }
+
+    if (parent->left != NULL && this == parent->left) {
+        parent->left = NULL;
+    } else if (parent->right != NULL && this == parent->right) {
+        parent->right = NULL;
+    }
+    delete this;
 }
 
 /**
@@ -199,7 +297,7 @@ std::vector<entry> node::get_all_nodes() const {
 }
 
 /*
- * Find the minimum node in the tree / the inorder successor of this.
+ * Find the minimum node in the tree / the inorder successor of "this".
  */
 node* node::find_min() {
     node* tmp = this;
@@ -209,6 +307,26 @@ node* node::find_min() {
     } 
 
     return tmp;
+}
+
+/**
+ * Set curr to the new color if curr is not NULL
+ */
+void node::set_color(node* curr, colors new_color) {
+    if (curr != NULL) {
+        curr->color = new_color;
+    }
+}
+
+/*
+ * Return the color of the node.
+ * All NULL nodes are default BLACK
+ */
+node::colors node::get_color(node* curr) {
+    if (curr == NULL) {
+        return BLACK;
+    } 
+    return curr->color;
 }
 
 /**
@@ -222,19 +340,33 @@ void node::rotate_left() {
     node* y = right;
 
     node* left_child = new node(pair);
-    left_child->left = left;
+    if (left != NULL) {
+        left_child->left = new node(left);
+        left_child->left->parent = left_child;
+        delete left;
+    }
+    
     left_child->right = y->left;
+    if (left_child->right != NULL) {
+        left_child->right->parent = left_child;
+    }
+
     left_child->parent = this;
     left_child->color = color;
 
+    
     if (right->right != NULL) {
         right->right->parent = this;
     }
 
     pair = y->pair;
-    left = left_child;
     color = y->color;
+    left = left_child;
     right = y->right;
+    if (right != NULL) {
+        right->parent = this;
+    }
+
     delete y;
 }
 
@@ -249,8 +381,17 @@ void node::rotate_right() {
     node* y = left;
 
     node* right_child = new node(pair);
+    if (right != NULL) {
+        right_child->right = new node(right);
+        right_child->right->parent = this;
+        delete right;
+    }
+
     right_child->left = y->right;
-    right_child->right = right;
+    if (right_child->left != NULL) {
+        right_child->right->parent = this;
+    }
+
     right_child->parent = this;
     right_child->color = color;
 
@@ -258,11 +399,13 @@ void node::rotate_right() {
         left->left->parent = this;
     }
 
-    // set this to y 
     pair = y->pair;
     color = y->color;
     right = right_child; 
     left = y->left;
+    if (left != NULL) {
+        left->parent = this;
+    }
     delete y;
 }
 
@@ -284,9 +427,5 @@ void node::print_2d(int space) const {
 }
 
 std::string node::to_str() const {
-    if (color == RED) {
-        return pair.key + ":" + "RED";
-    } else {
-        return pair.key + ":" + "BLACK";
-    }
+    return pair.key + ":" + ((color == RED) ? "RED" : "BLACK");
 }

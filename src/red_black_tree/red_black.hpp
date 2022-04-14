@@ -13,9 +13,11 @@ class red_black_tree {
 
         void insert(entry new_pair);
 
-        void remove(entry target);
+        void remove(std::string target);
 
-        bool exists(entry target) const;
+        bool exists(std::string target) const;
+
+        std::string get(std::string target) const;
 
         void print() const;
 

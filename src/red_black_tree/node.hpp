@@ -7,7 +7,7 @@
 
 
 class node {
-    enum colors {RED, BLACK};
+    enum colors {RED, BLACK, DOUBLE_BLACK};
     
     public:
         entry pair;
@@ -19,11 +19,13 @@ class node {
 
         node(entry pair, bool is_root);
 
+        node(node* ptr);
+
         void insert(entry new_pair);
 
         void remove(entry target);
 
-        bool exists(entry target) const;
+        node* find_node(entry target);
 
         std::vector<entry> get_all_nodes() const;
 
@@ -38,9 +40,7 @@ class node {
 
         void fix_insert();
 
-        node* remove_node(entry target);
-
-        void fix_remove();
+        void remove_node();
 
         node* find_min();
 
@@ -49,6 +49,10 @@ class node {
         void rotate_right();
 
         void print_seperator();
+
+        static colors get_color(node* curr);
+
+        static void set_color(node* curr, colors new_color);
 };
 
 #endif // NODE_H

@@ -6,7 +6,11 @@ red_black_tree::red_black_tree() {
     root = NULL;
 }
 
-red_black_tree::~red_black_tree() {}
+red_black_tree::~red_black_tree() {
+    if (root != NULL) {
+        root->delete_tree();
+    }
+}
 
 void red_black_tree::insert(entry new_pair) {
     if (root == NULL) {
@@ -16,17 +20,25 @@ void red_black_tree::insert(entry new_pair) {
     }
 }
 
-void red_black_tree::remove(entry target) {
+void red_black_tree::remove(std::string target) {
     if (root != NULL) {
-        root->remove(target);
+        root->remove({target, ""});
     }
 }
 
-bool red_black_tree::exists(entry target) const {
+bool red_black_tree::exists(std::string target) const {
     if (root != NULL) {
-        return root->exists(target);
+        return root->find_node({target, ""}) != NULL;
     }
     return false;
+}
+
+std::string red_black_tree::get(std::string target) const {
+    if (root != NULL) {
+        node* x = root->find_node({target, ""});
+        return x == NULL ? NULL : x->pair.key;
+    }
+    return NULL; 
 }
 
 void red_black_tree::print() const {
