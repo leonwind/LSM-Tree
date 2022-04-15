@@ -1,3 +1,4 @@
+#include "lsm_tree/lsm_tree.hpp"
 #include "bloom_filter/bloom.hpp"
 #include "red_black_tree/red_black.hpp"
 #include "types.hpp"
@@ -18,48 +19,82 @@ void test_bloom_filter() {
 void test_red_black_tree() {
     red_black_tree rb_tree;
 
-    /*
-    rb_tree.insert({"1", ""});
-    rb_tree.insert({"2", ""});
-    rb_tree.insert({"3", ""});
-    rb_tree.insert({"4", ""});
-    rb_tree.insert({"4", ""});
-    rb_tree.insert({"5", ""});
-    rb_tree.insert({"6", ""});
-    rb_tree.insert({"7", ""});
-    rb_tree.insert({"8", ""});
-    rb_tree.insert({"9", ""});
-    rb_tree.print();
-
-    std::cout << "------" << std::endl;
-
-    rb_tree.remove("8");
-    rb_tree.print();
-    */
-
     rb_tree.insert({"8", ""});
     rb_tree.insert({"18", ""});
     rb_tree.insert({"5", ""});
-    //std::cout << "----------" << std::endl;
     rb_tree.insert({"15", ""});
-    //rb_tree.print();
     rb_tree.insert({"17", ""});
     rb_tree.insert({"25", ""});
     rb_tree.insert({"40", ""});
-    //std::cout << "----------" << std::endl;
     rb_tree.insert({"80", ""});
     rb_tree.insert({"19", ""});
     rb_tree.remove("25");
     rb_tree.remove("8");
     rb_tree.remove("17");
     rb_tree.print();
-    
-    //std::cout << "----------" << std::endl;
-    //rb_tree.remove("8");
+}
+
+enum commands {
+    PUT,
+    GET,
+    DELETE,
+    RANGE,
+    EXIT,
+    NONE,
+};
+
+commands cmd_to_enum(std::string in_str) {
+    if (in_str == "PUT" || in_str == "put") return PUT;
+    if (in_str == "GET" || in_str == "get") return GET;
+    if (in_str == "DELETE" || in_str == "delete") return DELETE;
+    if (in_str == "RANGE" || in_str == "range") return RANGE;
+    if (in_str == "EXIT" || in_str == "exit") return EXIT;
+    return NONE;
+}
+
+void command_loop(lsm_tree& db) {
+    bool run = true;
+    std::string command;
+    std::string key, value;
+
+    while (run) {
+        std::cout << "> ";
+        std::cin >> command;
+
+        switch(cmd_to_enum(command)) {
+            case PUT:
+                std::cin >> key >> value;
+                db.put(key, value);
+                break;
+
+            case GET:
+                std::cin >> key;
+                value = db.get(key);
+                std::cout << value << std::endl;
+                break;
+
+            case DELETE:
+                std::cin >> key;
+                db.remove(key);
+                break;
+
+            case RANGE:
+                break;
+
+            case EXIT:
+                run = false;
+                break;
+
+            default:
+                break;
+        } 
+    }
 }
 
 int main() {
-    test_red_black_tree();
+    //test_red_black_tree();
+    lsm_tree db;
+    command_loop(db);
 
     return 0;
 }

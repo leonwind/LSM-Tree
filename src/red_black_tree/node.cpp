@@ -1,6 +1,7 @@
 #include "node.hpp"
 #include <iostream>
 #include <ostream>
+#include <string>
 
 
 node::node(entry pair, bool is_root = false) {
@@ -9,7 +10,6 @@ node::node(entry pair, bool is_root = false) {
     left = NULL;
     right = NULL;
     parent = NULL;
-
     color = is_root ? BLACK : RED;
 }
 
@@ -160,11 +160,12 @@ void node::fix_insert() {
  * Remove a key value pair in the tree.
  * First do a binary search to find the node to actually delete but only return the position.
  * Do the actual deletion while fixing the tree.
+ * Returns if the whole tree got deleted.
 */
-void node::remove(entry target) {
+bool node::remove(entry target) {
     node* to_remove = find_node(target);
     if (to_remove == NULL) {
-        return;
+        return false;
     }
 
     // If to_remove has both children, we swap it with its inorder successor
@@ -175,13 +176,14 @@ void node::remove(entry target) {
         to_remove = next_greater;
     }
 
-    if (to_remove->parent == NULL) {
+    if (to_remove->parent == NULL && to_remove->left == NULL && to_remove->right == NULL) {
         delete_tree();
-        return;
+        return true;
     }
 
     to_remove->remove_node();
     color = BLACK;
+    return false;
 }
 
 /**
@@ -193,15 +195,31 @@ void node::remove_node() {
     if (color == RED || get_color(left) == RED || get_color(right) == RED) {
         node* child = (left != NULL) ? left : right;
 
+        if (parent == NULL) {
+            pair = child->pair;
+            left = child->left;
+            right = child->right;
+            if (child->left != NULL) {
+                child->left->parent = this;
+            }
+
+            if (child->right != NULL) {
+                child->right->parent = this;
+            }
+            return; 
+        }
+
         if (this == parent->left) {
             parent->left = child;
         } else {
             parent->right = child;
         }
+
         if (child != NULL) {
             child->parent = parent;
             child->color = BLACK;
         }
+
         delete this;
         return;
     }
@@ -222,6 +240,7 @@ void node::remove_node() {
                 // Check for NULL of sibling->left and right??
                 if (get_color(sibling->left) == BLACK && get_color(sibling->right) == BLACK) {
                     set_color(sibling, RED);
+
                     if (get_color(curr->parent) == RED) {
                         set_color(curr->parent, BLACK);
                     }  else {
@@ -244,6 +263,7 @@ void node::remove_node() {
             }
         } else {
             sibling = curr->parent->left;
+
             if (get_color(sibling) == RED) {
                 sibling->color = BLACK;
                 curr->parent->color = RED;
@@ -285,13 +305,14 @@ void node::remove_node() {
     } else if (parent->right != NULL && this == parent->right) {
         parent->right = NULL;
     }
+
     delete this;
 }
 
 /**
  * Return all stored key-values pairs in an inorder fashion.
  */
-void node::in_order(std::vector<entry> nodes) const {
+void node::in_order(std::vector<entry>& nodes) const {
     if (left != NULL) {
         left->in_order(nodes);
     } 
@@ -348,9 +369,10 @@ void node::rotate_left() {
 
     node* left_child = new node(pair);
     if (left != NULL) {
-        left_child->left = new node(left);
+        //left_child->left = new node(left);
+        left_child->left = left;
         left_child->left->parent = left_child;
-        delete left;
+        //delete left;
     }
     
     left_child->right = y->left;
@@ -360,7 +382,6 @@ void node::rotate_left() {
 
     left_child->parent = this;
     left_child->color = color;
-
     
     if (right->right != NULL) {
         right->right->parent = this;
@@ -389,14 +410,15 @@ void node::rotate_right() {
 
     node* right_child = new node(pair);
     if (right != NULL) {
-        right_child->right = new node(right);
-        right_child->right->parent = this;
-        delete right;
+        //right_child->right = new node(right);
+        right_child->right = right;
+        right_child->right->parent = right_child;
+        //delete right;
     }
 
     right_child->left = y->right;
     if (right_child->left != NULL) {
-        right_child->right->parent = this;
+        right_child->left->parent = right_child;
     }
 
     right_child->parent = this;
@@ -433,6 +455,33 @@ void node::print_2d(int space) const {
     }
 }
 
+void node::check_for_errors(bool is_root) {
+    if (right != NULL) {
+        right->check_for_errors(false);
+    }
+
+    if (left != NULL) {
+        left->check_for_errors(false);
+    }
+
+    if (!is_root) {
+        if (parent->pair.key.length() > 100) {
+            std::cout << "---------" << std::endl;
+            std::cout << "ERROR KEY IS TOO LONG" << std::endl;
+            std::cout << "CURR: " << pair.key << std::endl;
+            std::cout << "------" << std::endl;
+            std::cout << "PARENT LENGTH: " << parent->pair.key.length() << std::endl;
+        }
+        if (parent->left != this && parent->right != this) {
+            std::cout << "---------" << std::endl;
+            std::cout << "ERROR ERROR ERROR" << std::endl;
+            std::cout << "CURR: " << to_str() << std::endl;
+            std::cout << "Parent: " << parent->to_str() << std::endl;
+            std::cout << "---------" << std::endl;
+        }
+    }
+}
+
 std::string node::to_str() const {
-    return pair.key + ":" + ((color == RED) ? "RED" : "BLACK");
+    return pair.key + ":" + std::to_string(color);
 }

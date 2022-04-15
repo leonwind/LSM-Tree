@@ -25,8 +25,8 @@ class lsm_tree {
     private:
         static const long BLOOM_SIZE = 1000;
 
-        bloom_filter* bloom; 
-        red_black_tree* rb_tree;
+        bloom_filter bloom; 
+        red_black_tree rb_tree;
 };
 
 #endif // LSM_TREE_H

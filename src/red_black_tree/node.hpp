@@ -23,11 +23,11 @@ class node {
 
         void insert(entry new_pair);
 
-        void remove(entry target);
+        bool remove(entry target);
 
         node* find_node(entry target);
 
-        void in_order(std::vector<entry> nodes) const;
+        void in_order(std::vector<entry>& nodes) const;
 
         void delete_tree(); 
 
@@ -53,6 +53,8 @@ class node {
         static colors get_color(node* curr);
 
         static void set_color(node* curr, colors new_color);
+
+        void check_for_errors(bool is_root);
 };
 
 #endif // NODE_H
