@@ -41,6 +41,12 @@ std::string red_black_tree::get(std::string target) const {
     return NULL; 
 }
 
+std::vector<entry> red_black_tree::get_all_nodes() const {
+    std::vector<entry> nodes;
+    root->in_order(nodes);
+    return nodes;
+}
+
 void red_black_tree::print() const {
     root->print_2d(0);
     std::cout << std::endl;

@@ -27,7 +27,7 @@ class node {
 
         node* find_node(entry target);
 
-        std::vector<entry> get_all_nodes() const;
+        void in_order(std::vector<entry> nodes) const;
 
         void delete_tree(); 
 

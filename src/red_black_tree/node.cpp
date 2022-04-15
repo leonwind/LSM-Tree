@@ -291,9 +291,16 @@ void node::remove_node() {
 /**
  * Return all stored key-values pairs in an inorder fashion.
  */
-std::vector<entry> node::get_all_nodes() const {
-    std::vector<entry> nodes;
-    return nodes;
+void node::in_order(std::vector<entry> nodes) const {
+    if (left != NULL) {
+        left->in_order(nodes);
+    } 
+
+    nodes.push_back(pair);
+
+    if (right != NULL) {
+        right->in_order(nodes);
+    }
 }
 
 /*

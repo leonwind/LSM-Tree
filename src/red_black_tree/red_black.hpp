@@ -3,6 +3,7 @@
 
 #include "node.hpp"
 #include "../types.hpp"
+#include <vector>
 
 class red_black_tree {
 
@@ -18,6 +19,8 @@ class red_black_tree {
         bool exists(std::string target) const;
 
         std::string get(std::string target) const;
+
+        std::vector<entry> get_all_nodes() const;
 
         void print() const;
 
