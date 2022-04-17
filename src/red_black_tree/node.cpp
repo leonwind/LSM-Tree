@@ -90,18 +90,16 @@ node* node::insert_node(entry new_pair) {
             left_child->parent = this;
             left = left_child;
             return left_child;
-        } else {
-            return left->insert_node(new_pair);
-        }
+        } 
+        return left->insert_node(new_pair);
     } else {
         if (right == NULL) {
             node* right_child = new node(new_pair);
             right_child->parent = this;
             right = right_child;
             return right_child;
-        } else {
-            return right->insert_node(new_pair);
-        }
+        } 
+        return right->insert_node(new_pair);
     }
 }
 
@@ -333,7 +331,7 @@ node* node::find_min() {
     while (tmp->left != NULL) {
         tmp = tmp->left;
     } 
-
+    
     return tmp;
 }
 
