@@ -27,6 +27,7 @@ class lsm_tree {
     private:
         static const long BLOOM_SIZE = 1000000;
         static const uint64_t MEMTABLE_SIZE = 1000;
+        static const uint64_t SPARSITY_FACTOR = 1000;
         static const std::string MEMTABLE_PATH;
         static const std::string WAL_PATH;
         static const std::string SEGMENT_BASE;
@@ -38,7 +39,10 @@ class lsm_tree {
         write_ahead_log wal;
 
         std::string segment_path;
-        uint segment_i;
+        uint16_t segment_i;
+
+        long sparsity_counter;
+
 
         void flush_memtable_to_disk();
 
@@ -48,7 +52,9 @@ class lsm_tree {
 
         std::string pair_to_log_entry(entry pair);
 
-        std::string new_segment_path();
+        std::string get_new_segment_path();
+
+        void reset_sparsity_counter();
 };
 
 #endif // LSM_TREE_H
