@@ -8,6 +8,8 @@
 class red_black_tree {
 
     public:
+        uint64_t size;
+
         red_black_tree();
 
         ~red_black_tree();
@@ -21,6 +23,8 @@ class red_black_tree {
         std::string get(std::string target) const;
 
         std::vector<entry> get_all_nodes() const;
+
+        std::vector<entry> get_and_delete_all_nodes();
 
         void print() const;
 

@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <filesystem>
 
 class write_ahead_log {
     

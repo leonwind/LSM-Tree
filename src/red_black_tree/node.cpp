@@ -310,17 +310,23 @@ void node::remove_node() {
 /**
  * Return all stored key-values pairs in an inorder fashion.
  */
-void node::in_order(std::vector<entry>& nodes) const {
+void node::in_order(std::vector<entry>& nodes, bool delete_node) const {
     if (left != NULL) {
-        left->in_order(nodes);
+        left->in_order(nodes, delete_node);
     } 
 
     nodes.push_back(pair);
 
     if (right != NULL) {
-        right->in_order(nodes);
+        right->in_order(nodes, delete_node);
+    }
+
+    if (delete_node) {
+        delete this;
     }
 }
+
+
 
 /*
  * Find the minimum node in the tree / the inorder successor of "this".

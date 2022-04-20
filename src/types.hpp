@@ -3,6 +3,10 @@
 
 #include <string>
 
+// Bad solution since this value is not allowed to be used by the user
+// of the db.
+#define TOMBSTONE "+++TOMBSTONES+++"
+
 struct entry {
     std::string key;
     std::string val;
