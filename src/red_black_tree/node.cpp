@@ -1,15 +1,17 @@
 #include "node.hpp"
+#include "data.hpp"
 #include <iostream>
 #include <ostream>
 #include <string>
 
 
-node::node(entry pair, bool is_root = false) {
-    this->pair = pair;
-    
+node::node(rb_entry data, bool is_root = false) {
+    pair = data;
+
     left = NULL;
     right = NULL;
     parent = NULL;
+
     color = is_root ? BLACK : RED;
 }
 
@@ -46,7 +48,7 @@ void node::delete_tree() {
  * Check if the key of the kv-pair exists in the tree.
  * If so, return the node, otherwise NULL.
  */
-node* node::find_node(entry target) {
+node* node::find_node(rb_entry target) {
     if (pair == target) {
         return this;
     }
@@ -67,7 +69,7 @@ node* node::find_node(entry target) {
  * Run first a normal bst insertion and then fix the tree
  * by fixing any violated Red Black Tree invariations.
 */
-void node::insert(entry new_pair) {
+void node::insert(rb_entry new_pair) {
     node* inserted = insert_node(new_pair);
     inserted->fix_insert();
     color = BLACK;
@@ -78,7 +80,7 @@ void node::insert(entry new_pair) {
  * using a standard binary search tree insertion.
  * Return a pointer to inserted node.
  */
-node* node::insert_node(entry new_pair) {
+node* node::insert_node(rb_entry new_pair) {
     if (new_pair == pair) {
         pair = new_pair;
         return this;
@@ -92,15 +94,15 @@ node* node::insert_node(entry new_pair) {
             return left_child;
         } 
         return left->insert_node(new_pair);
-    } else {
-        if (right == NULL) {
-            node* right_child = new node(new_pair);
-            right_child->parent = this;
-            right = right_child;
-            return right_child;
-        } 
-        return right->insert_node(new_pair);
     }
+
+    if (right == NULL) {
+        node* right_child = new node(new_pair);
+        right_child->parent = this;
+        right = right_child;
+        return right_child;
+    } 
+    return right->insert_node(new_pair);
 }
 
 /**
@@ -160,7 +162,7 @@ void node::fix_insert() {
  * Do the actual deletion while fixing the tree.
  * Returns if the whole tree got deleted.
 */
-bool node::remove(entry target) {
+bool node::remove(rb_entry target) {
     node* to_remove = find_node(target);
     if (to_remove == NULL) {
         return false;
@@ -310,7 +312,7 @@ void node::remove_node() {
 /**
  * Return all stored key-values pairs in an inorder fashion.
  */
-void node::in_order(std::vector<entry>& nodes, bool delete_node) const {
+void node::in_order(std::vector<rb_entry>& nodes, bool delete_node) const {
     if (left != NULL) {
         left->in_order(nodes, delete_node);
     } 

@@ -2,6 +2,7 @@
 #define NODE_H 
 
 #include "../types.hpp"
+#include "data.hpp"
 #include <string>
 #include <vector>
 
@@ -10,24 +11,27 @@ class node {
     enum colors {RED, BLACK, DOUBLE_BLACK};
     
     public:
-        entry pair;
+        rb_entry pair;
         colors color;
 
         node* left;
         node* right;
         node* parent;
 
-        node(entry pair, bool is_root);
+        std::string segment;
+        int offset;
+
+        node(rb_entry data, bool is_root);
 
         node(node* ptr);
 
-        void insert(entry new_pair);
+        void insert(rb_entry new_pair);
 
-        bool remove(entry target);
+        bool remove(rb_entry target);
 
-        node* find_node(entry target);
+        node* find_node(rb_entry target);
 
-        void in_order(std::vector<entry>& nodes, bool delete_node) const;
+        void in_order(std::vector<rb_entry>& nodes, bool delete_node) const;
 
         void delete_tree(); 
 
@@ -36,7 +40,7 @@ class node {
         std::string to_str() const;
 
     private:
-        node* insert_node(entry new_pair);
+        node* insert_node(rb_entry new_pair);
 
         void fix_insert();
 

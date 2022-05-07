@@ -64,7 +64,11 @@ void command_loop(lsm_tree& db) {
         switch(cmd_to_enum(command)) {
             case PUT:
                 std::cin >> key >> value;
-                db.put(key, value);
+                if (value == "") {
+                    std::cout << "Value can not be empty" << std::endl;
+                } else {
+                    db.put(key, value);
+                }
                 break;
 
             case GET:

@@ -16,18 +16,18 @@ class lsm_tree {
 
         ~lsm_tree();
         
-        void put(std::string key, std:: string value);
+        void put(std::string key, std::string value);
 
         std::string get(std::string key);
 
         void remove(std::string key);
 
-        std::vector<entry> range(std::string start, size_t length);
+        std::vector<kv_pair> range(std::string start, size_t length);
 
     private:
-        static const long BLOOM_SIZE = 1000000;
-        static const uint64_t MEMTABLE_SIZE = 1000;
-        static const uint64_t SPARSITY_FACTOR = 1000;
+        static const long BLOOM_SIZE{1000000};
+        static const uint64_t MEMTABLE_SIZE{1000};
+        static const uint64_t SPARSITY_FACTOR{1000};
         static const std::string MEMTABLE_PATH;
         static const std::string WAL_PATH;
         static const std::string SEGMENT_BASE;
@@ -39,7 +39,7 @@ class lsm_tree {
         write_ahead_log wal;
 
         std::string segment_path;
-        uint16_t segment_i;
+        int16_t segment_i;
 
         long sparsity_counter;
 
@@ -50,7 +50,7 @@ class lsm_tree {
 
         void compact();
 
-        std::string pair_to_log_entry(entry pair);
+        std::string pair_to_log_entry(kv_pair entry);
 
         std::string get_new_segment_path();
 

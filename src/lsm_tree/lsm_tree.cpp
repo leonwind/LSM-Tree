@@ -16,8 +16,10 @@ const std::string lsm_tree::SEGMENT_BASE = "../src/.internal_storage/segments/";
 
 
 lsm_tree::lsm_tree(): bloom(BLOOM_SIZE), memtable(), index(), wal(WAL_PATH) {
-    segment_i = 0; 
-    sparsity_counter = SPARSITY_FACTOR;
+    int16_t segment_i{0}; 
+    int16_t sparsity_counter{0};
+
+    restore_memtable();
 }
 
 lsm_tree::~lsm_tree() {}
@@ -31,16 +33,16 @@ lsm_tree::~lsm_tree() {}
  * 3. Insert into memtable.
  */
 void lsm_tree::put(std::string key, std::string value) {
-    entry kv_pair = {key, value};
+    kv_pair entry = {key, value};
 
-    if (memtable.size + key.size() + value.size() > 5) {
+    if (memtable.size + key.size() + value.size() > MEMTABLE_SIZE) {
         compact();
         flush_memtable_to_disk();
         wal.clear();
     }
 
-    wal.append(pair_to_log_entry(kv_pair));
-    memtable.insert(kv_pair);
+    wal.append(pair_to_log_entry(entry));
+    memtable.insert(entry);
 }
 
 /**
@@ -67,8 +69,8 @@ void lsm_tree::remove(std::string key) {
     memtable.remove(key);
 }
 
-std::vector<entry> lsm_tree::range(std::string start, size_t len) {
-    std::vector<entry> pairs;
+std::vector<kv_pair> lsm_tree::range(std::string start, size_t len) {
+    std::vector<kv_pair> pairs;
     return pairs;
 }
 
@@ -87,13 +89,21 @@ void lsm_tree::flush_memtable_to_disk() {
     std::ofstream segment;
     std::string curr_segment = get_new_segment_path();
     segment.open(curr_segment);
-    uint64_t key_offset = 0;
+    int64_t key_offset = 0;
 
-    for (auto& pair : memtable.get_and_delete_all_nodes()) {
-        bloom.set(pair.key);
+    for (auto& rb_nodes : memtable.get_and_delete_all_nodes()) {
+        kv_pair pair = {rb_nodes.key, rb_nodes.val};
+        bloom.set(rb_nodes.key);
+
+        // Insert every Sparsity_factor'th node into the sparse index
+        if (sparsity_counter++ % SPARSITY_FACTOR == 0) {
+            index.insert(pair, segment_i++, key_offset);
+            sparsity_counter = 0;
+        }
 
         std::string log_entry = pair_to_log_entry(pair);
         segment << log_entry << std::flush;
+
         key_offset += log_entry.size();
     }
 
@@ -111,13 +121,13 @@ void lsm_tree::restore_memtable() {
  * Create a new unique segment path.
  */
 std::string lsm_tree::get_new_segment_path() {
-    return SEGMENT_BASE + std::to_string(++segment_i) + ".segment";
+    return SEGMENT_BASE + std::to_string(segment_i++) + ".segment";
 }
 
 /**
  * Converts a kv-pair into a comma seperated newline log entry.
  */
-std::string lsm_tree::pair_to_log_entry(entry pair) {
+std::string lsm_tree::pair_to_log_entry(kv_pair pair) {
     return pair.key + "," + pair.val + "\n";
 }
 
