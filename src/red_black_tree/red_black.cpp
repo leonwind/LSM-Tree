@@ -67,6 +67,15 @@ std::string red_black_tree::get(std::string target) const {
     return "";
 }
 
+// Return the node which is the next smallest one if target does not exist
+rb_entry red_black_tree::floor(std::string target) const {
+    if (root != NULL) {
+        node* x = root->floor({target});
+        return x == NULL ? rb_entry{} : x->pair;
+    }
+    return rb_entry{};
+}
+
 std::vector<rb_entry> red_black_tree::get_all_nodes() const {
     std::vector<rb_entry> nodes;
     root->in_order(nodes, false);

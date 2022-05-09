@@ -31,6 +31,8 @@ class node {
 
         node* find_node(rb_entry target);
 
+        node* floor(rb_entry target);
+
         void in_order(std::vector<rb_entry>& nodes, bool delete_node) const;
 
         void delete_tree(); 

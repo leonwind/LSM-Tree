@@ -53,15 +53,38 @@ node* node::find_node(rb_entry target) {
         return this;
     }
      
-    if (left != NULL && pair > target) {
+    if (pair > target && left != NULL) {
         return left->find_node(target);
     }
 
-    if (right != NULL && pair < target) {
+    if (pair < target && right != NULL) {
         return right->find_node(target);
     }
 
     return NULL;
+}
+
+/**
+ * Return the floor node of the target.
+ * If it does not exist, return NULL. 
+ */
+node* node::floor(rb_entry target) {
+    if (pair == target) {
+        return this;
+    }
+
+    if (pair > target && left != NULL) {
+        return left->floor(target);
+    }
+
+    if (right != NULL) {
+        node* x = right->floor(target);
+        if (x != NULL && x->pair <= target) {
+            return x;
+        }
+    }
+
+    return this;
 }
 
 /**

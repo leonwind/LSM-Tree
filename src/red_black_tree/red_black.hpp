@@ -26,6 +26,8 @@ class red_black_tree {
 
         std::string get(std::string target) const;
 
+        rb_entry floor(std::string target) const;
+
         std::vector<rb_entry> get_all_nodes() const;
 
         std::vector<rb_entry> get_and_delete_all_nodes();

@@ -39,10 +39,8 @@ class lsm_tree {
         write_ahead_log wal;
 
         std::string segment_path;
-        int16_t segment_i;
-
-        long sparsity_counter;
-
+        int64_t segment_i;
+        int64_t sparsity_counter;
 
         void flush_memtable_to_disk();
 
@@ -52,7 +50,7 @@ class lsm_tree {
 
         std::string pair_to_log_entry(kv_pair entry);
 
-        std::string get_new_segment_path();
+        static std::string get_new_segment_path(int64_t i);
 
         void reset_sparsity_counter();
 };

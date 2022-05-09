@@ -40,7 +40,10 @@ struct rb_entry {
     bool operator!=(const rb_entry& other) const {return key != other.key;}
     bool operator==(const rb_entry& other) const {return key == other.key;}
     bool operator<(const rb_entry& other) const {return key < other.key;}
+    bool operator<=(const rb_entry& other) const {return key <= other.key;}
     bool operator>(const rb_entry& other) const {return key > other.key;}
+    bool operator>=(const rb_entry& other) const {return key >= other.key;}
+    
 };
 
 #endif // DATA_H

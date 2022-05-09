@@ -16,8 +16,8 @@ const std::string lsm_tree::SEGMENT_BASE = "../src/.internal_storage/segments/";
 
 
 lsm_tree::lsm_tree(): bloom(BLOOM_SIZE), memtable(), index(), wal(WAL_PATH) {
-    int16_t segment_i{0}; 
-    int16_t sparsity_counter{0};
+    int64_t segment_i{0}; 
+    int64_t sparsity_counter{0};
 
     restore_memtable();
 }
@@ -86,18 +86,20 @@ void lsm_tree::compact() {
  * order in a new segment file.
  */
 void lsm_tree::flush_memtable_to_disk() {
+    std::string curr_segment = get_new_segment_path(segment_i);
+
     std::ofstream segment;
-    std::string curr_segment = get_new_segment_path();
     segment.open(curr_segment);
+
     int64_t key_offset = 0;
 
     for (auto& rb_nodes : memtable.get_and_delete_all_nodes()) {
         kv_pair pair = {rb_nodes.key, rb_nodes.val};
         bloom.set(rb_nodes.key);
 
-        // Insert every Sparsity_factor'th node into the sparse index
+        // Insert every Sparsity_factor'th node into the index
         if (sparsity_counter++ % SPARSITY_FACTOR == 0) {
-            index.insert(pair, segment_i++, key_offset);
+            index.insert(pair, segment_i, key_offset);
             sparsity_counter = 0;
         }
 
@@ -108,6 +110,7 @@ void lsm_tree::flush_memtable_to_disk() {
     }
 
     segments.push_back(curr_segment);
+    segment_i++;
 }
 
 /**
@@ -120,8 +123,8 @@ void lsm_tree::restore_memtable() {
 /*
  * Create a new unique segment path.
  */
-std::string lsm_tree::get_new_segment_path() {
-    return SEGMENT_BASE + std::to_string(segment_i++) + ".segment";
+std::string lsm_tree::get_new_segment_path(int64_t i) {
+    return SEGMENT_BASE + std::to_string(i) + ".segment";
 }
 
 /**
