@@ -24,6 +24,8 @@ class lsm_tree {
 
         std::vector<kv_pair> range(std::string start, size_t length);
 
+        void clear();
+
     private:
         static const long BLOOM_SIZE{1000000};
         static const uint64_t MEMTABLE_SIZE{1000};
@@ -44,9 +46,17 @@ class lsm_tree {
 
         void flush_memtable_to_disk();
 
+        void restore_db();
+
         void restore_memtable();
 
+        void restore_segments();
+
         void compact();
+
+        std::pair<bool, std::string> search_all_segments(std::string target);
+
+        std::pair<bool, std::string> search_segment(std::string target, std::string path, int64_t offset);
 
         std::string pair_to_log_entry(kv_pair entry);
 

@@ -1,6 +1,9 @@
 #include "lsm_tree.hpp"
+#include <fstream>
+#include <ios>
 #include <iostream>
 #include <string>
+#include <utility>
 
 /**
  * Main functionality of the LSM Tree.
@@ -9,17 +12,17 @@
  * e.g. Sparsity Counter.
  */
 
-
-const std::string lsm_tree::MEMTABLE_PATH = "../src/.internal_storage/memtable.bckup";
-const std::string lsm_tree::WAL_PATH = "../src/.internal_storage/wal.log";
-const std::string lsm_tree::SEGMENT_BASE = "../src/.internal_storage/segments/";
+const std::string BASE = "../src/.internal_storage/";
+const std::string lsm_tree::MEMTABLE_PATH = BASE + "memtable.bckup";
+const std::string lsm_tree::WAL_PATH = BASE + "wal.log";
+const std::string lsm_tree::SEGMENT_BASE = BASE + "segments/";
 
 
 lsm_tree::lsm_tree(): bloom(BLOOM_SIZE), memtable(), index(), wal(WAL_PATH) {
-    int64_t segment_i{0}; 
-    int64_t sparsity_counter{0};
+    segment_i = 0;
+    sparsity_counter = 0;
 
-    restore_memtable();
+    restore_db();
 }
 
 lsm_tree::~lsm_tree() {}
@@ -35,7 +38,8 @@ lsm_tree::~lsm_tree() {}
 void lsm_tree::put(std::string key, std::string value) {
     kv_pair entry = {key, value};
 
-    if (memtable.size + key.size() + value.size() > MEMTABLE_SIZE) {
+    // TODO
+    if (memtable.size + key.size() + value.size() > 5) {
         compact();
         flush_memtable_to_disk();
         wal.clear();
@@ -54,7 +58,7 @@ void lsm_tree::put(std::string key, std::string value) {
  */
 std::string lsm_tree::get(std::string key) {
     std::string val = memtable.get(key);
-    if (val != "") {
+    if (val != TOMBSTONE) {
         return val;
     }
 
@@ -62,7 +66,18 @@ std::string lsm_tree::get(std::string key) {
         return "";
     }
 
-    return "";
+    rb_entry floor_node = index.floor(key);
+
+    if (floor_node.key != TOMBSTONE) {
+        std::string segment_path = get_new_segment_path(floor_node.segment);
+
+        auto res = search_segment(key, segment_path, floor_node.offset);
+        if (res.first) {
+            return res.second;
+        }
+    }
+
+    return TOMBSTONE;
 }
 
 void lsm_tree::remove(std::string key) {
@@ -72,6 +87,13 @@ void lsm_tree::remove(std::string key) {
 std::vector<kv_pair> lsm_tree::range(std::string start, size_t len) {
     std::vector<kv_pair> pairs;
     return pairs;
+}
+
+/**
+ * Clears the whole store, Memtable and on-disk segments.
+ */
+void lsm_tree::clear() {
+
 }
 
 /**
@@ -113,10 +135,56 @@ void lsm_tree::flush_memtable_to_disk() {
     segment_i++;
 }
 
+std::pair<bool, std::string> lsm_tree::search_all_segments(std::string target) {
+    for (std::string curr_path : segments) {
+        auto res = search_segment(target, curr_path, 0);
+        if (res.first) {
+            return res;
+        }
+    }
+    return std::make_pair(false, "");
+}
+
+std::pair<bool, std::string> lsm_tree::search_segment(std::string target, std::string path, int64_t offset = 0) {
+    std::ifstream segment(path, std::ios_base::in);
+
+    if (segment.is_open()) {
+        segment.seekg(offset);
+        std::string line, key;
+
+        while (std::getline(segment, line)) {
+            size_t seperator_pos = line.find(",");
+            key = line.substr(0, seperator_pos);
+
+            if (target == key) {
+                return std::make_pair(true, line.substr(seperator_pos + 1, line.size()));
+            }
+        }
+    }
+
+    return std::make_pair(false, ""); 
+}
+
 /**
- * Restore a memtable from its backup file.
+ * Restore the in-memory tree, the bloom filter, the sparse index,
+ * and all the segments after restarting the db
+ */
+void lsm_tree::restore_db() {
+    restore_memtable();
+    restore_segments();
+}
+
+/**
+ * Restore a memtable from its WAL. 
  */
 void lsm_tree::restore_memtable() {
+
+}
+
+/**
+ * Restore all segment files from disk.
+ */
+void lsm_tree::restore_segments() {
 
 }
 
@@ -124,7 +192,8 @@ void lsm_tree::restore_memtable() {
  * Create a new unique segment path.
  */
 std::string lsm_tree::get_new_segment_path(int64_t i) {
-    return SEGMENT_BASE + std::to_string(i) + ".segment";
+    std::string path{SEGMENT_BASE + std::to_string(i) + ".segment"};
+    return path;
 }
 
 /**
