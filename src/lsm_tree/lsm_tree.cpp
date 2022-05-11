@@ -38,7 +38,6 @@ lsm_tree::~lsm_tree() {}
 void lsm_tree::put(std::string key, std::string value) {
     kv_pair entry = {key, value};
 
-    // TODO
     if (memtable.size + key.size() + value.size() > 5) {
         compact();
         flush_memtable_to_disk();
@@ -58,7 +57,11 @@ void lsm_tree::put(std::string key, std::string value) {
  */
 std::string lsm_tree::get(std::string key) {
     std::string val = memtable.get(key);
-    if (val != TOMBSTONE) {
+    if (val == TOMBSTONE) {
+        return "";
+    }
+
+    if (val != "") {
         return val;
     }
 
@@ -77,11 +80,11 @@ std::string lsm_tree::get(std::string key) {
         }
     }
 
-    return TOMBSTONE;
+    return "";
 }
 
 void lsm_tree::remove(std::string key) {
-    memtable.remove(key);
+    put(key, TOMBSTONE);
 }
 
 std::vector<kv_pair> lsm_tree::range(std::string start, size_t len) {
@@ -98,6 +101,7 @@ void lsm_tree::clear() {
 
 /**
  * Merge multiple segments into one.
+ * TODO
  */
 void lsm_tree::compact() {
 
@@ -176,6 +180,7 @@ void lsm_tree::restore_db() {
 
 /**
  * Restore a memtable from its WAL. 
+ * TODO
  */
 void lsm_tree::restore_memtable() {
 
@@ -190,6 +195,7 @@ void lsm_tree::restore_segments() {
 
 /*
  * Create a new unique segment path.
+ * TODO
  */
 std::string lsm_tree::get_new_segment_path(int64_t i) {
     std::string path{SEGMENT_BASE + std::to_string(i) + ".segment"};

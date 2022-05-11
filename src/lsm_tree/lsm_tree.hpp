@@ -27,7 +27,7 @@ class lsm_tree {
         void clear();
 
     private:
-        static const long BLOOM_SIZE{1000000};
+        static const uint64_t BLOOM_SIZE{1000000};
         static const uint64_t MEMTABLE_SIZE{1000};
         static const uint64_t SPARSITY_FACTOR{1000};
         static const std::string MEMTABLE_PATH;

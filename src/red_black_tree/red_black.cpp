@@ -61,18 +61,18 @@ bool red_black_tree::exists(std::string target) const {
 std::string red_black_tree::get(std::string target) const {
     if (root != NULL) {
         node* x = root->find_node({target});
-        return x == NULL ? TOMBSTONE : x->pair.val; 
+        return x == NULL ? "" : x->pair.val; 
     }
-    return TOMBSTONE;
+    return "";
 }
 
 // Return the node which is the next smallest one if target does not exist
 rb_entry red_black_tree::floor(std::string target) const {
     if (root != NULL) {
         node* x = root->floor({target});
-        return x == NULL ? rb_entry{TOMBSTONE} : x->pair;
+        return x == NULL ? rb_entry{""} : x->pair;
     }
-    return rb_entry{TOMBSTONE};
+    return rb_entry{""};
 }
 
 std::vector<rb_entry> red_black_tree::get_all_nodes() const {

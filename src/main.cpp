@@ -90,6 +90,7 @@ void command_loop(lsm_tree& db) {
                 break;
 
             default:
+                std::cout << "Command '" << command << "' not found." << std::endl; 
                 break;
         } 
     }
