@@ -38,16 +38,14 @@ enum commands {
     PUT,
     GET,
     DELETE,
-    RANGE,
     EXIT,
     NONE,
 };
 
-commands cmd_to_enum(std::string in_str) {
+commands cmd_to_enum(const std::string& in_str) {
     if (in_str == "PUT" || in_str == "put") return PUT;
     if (in_str == "GET" || in_str == "get") return GET;
     if (in_str == "DELETE" || in_str == "delete") return DELETE;
-    if (in_str == "RANGE" || in_str == "range") return RANGE;
     if (in_str == "EXIT" || in_str == "exit") return EXIT;
     return NONE;
 }
@@ -80,9 +78,6 @@ void command_loop(lsm_tree& db) {
             case DELETE:
                 std::cin >> key;
                 db.remove(key);
-                break;
-
-            case RANGE:
                 break;
 
             case EXIT:

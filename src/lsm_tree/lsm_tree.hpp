@@ -16,13 +16,11 @@ class lsm_tree {
 
         ~lsm_tree();
         
-        void put(std::string key, std::string value);
+        void put(const std::string& key, const std::string& value);
 
-        std::string get(std::string key);
+        std::string get(const std::string& key);
 
-        void remove(std::string key);
-
-        std::vector<kv_pair> range(std::string start, size_t length);
+        void remove(const std::string& key);
 
         void clear();
 
@@ -40,7 +38,6 @@ class lsm_tree {
         std::vector<std::string> segments;
         write_ahead_log wal;
 
-        std::string segment_path;
         int64_t segment_i;
         int64_t sparsity_counter;
 
@@ -54,11 +51,11 @@ class lsm_tree {
 
         void compact();
 
-        std::pair<bool, std::string> search_all_segments(std::string target);
+        std::pair<bool, std::string> search_all_segments(const std::string& target);
 
-        std::pair<bool, std::string> search_segment(std::string target, std::string path, int64_t offset);
+        static std::pair<bool, std::string> search_segment(const std::string& target, const std::string& path, int64_t offset);
 
-        std::string pair_to_log_entry(kv_pair entry);
+        static std::string pair_to_log_entry(const kv_pair& entry);
 
         static std::string get_new_segment_path(int64_t i);
 

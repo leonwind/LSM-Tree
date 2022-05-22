@@ -14,12 +14,12 @@ class bloom_filter {
 
         ~bloom_filter();
 
-        void set(std::string key);
+        void set(const std::string& key);
 
-        bool is_set(std::string key) const;
+        bool is_set(const std::string& key) const;
 
     private:
-        uint64_t string_to_uint64(std::string key) const;
+        uint64_t string_to_uint64(const std::string& key) const;
 
         uint64_t hash_1(uint64_t key) const;
 

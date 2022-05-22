@@ -12,7 +12,7 @@ bloom_filter::~bloom_filter() {
     ~table;
 }
 
-void bloom_filter::set(std::string key) {
+void bloom_filter::set(const std::string& key) {
     uint64_t k = string_to_uint64(key);
 
     table.set(hash_1(k));
@@ -20,7 +20,7 @@ void bloom_filter::set(std::string key) {
     table.set(hash_3(k));
 }
 
-bool bloom_filter::is_set(std::string key) const {
+bool bloom_filter::is_set(const std::string& key) const {
     uint64_t k = string_to_uint64(key);
 
     return table.test(hash_1(k)) 
@@ -28,7 +28,7 @@ bool bloom_filter::is_set(std::string key) const {
         && table.test(hash_3(k));
 }
 
-uint64_t bloom_filter::string_to_uint64(std::string key) const {
+uint64_t bloom_filter::string_to_uint64(const std::string& key) const {
     return hasher(key);
 }
 

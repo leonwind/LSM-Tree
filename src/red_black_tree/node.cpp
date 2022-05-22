@@ -3,14 +3,15 @@
 #include <iostream>
 #include <ostream>
 #include <string>
+#include <utility>
 
 
 node::node(rb_entry data, bool is_root = false) {
-    pair = data;
+    pair = std::move(data);
 
-    left = NULL;
-    right = NULL;
-    parent = NULL;
+    left = nullptr;
+    right = nullptr;
+    parent = nullptr;
 
     color = is_root ? BLACK : RED;
 }
@@ -20,12 +21,12 @@ node::node(node* ptr) {
     color = ptr->color;
     
     left = ptr->left;
-    if (left != NULL) {
+    if (left != nullptr) {
         left->parent = this;
     }
 
     right = ptr->right;
-    if (right != NULL) {
+    if (right != nullptr) {
         right->parent = this;
     }
 
@@ -33,11 +34,11 @@ node::node(node* ptr) {
 }
 
 void node::delete_tree() {
-    if (left != NULL) {
+    if (left != nullptr) {
         left->delete_tree();
     } 
 
-    if (right != NULL) {
+    if (right != nullptr) {
         right->delete_tree();
     }
 
@@ -48,38 +49,38 @@ void node::delete_tree() {
  * Check if the key of the kv-pair exists in the tree.
  * If so, return the node, otherwise NULL.
  */
-node* node::find_node(rb_entry target) {
+node* node::find_node(const rb_entry& target) {
     if (pair == target) {
         return this;
     }
      
-    if (pair > target && left != NULL) {
+    if (pair > target && left != nullptr) {
         return left->find_node(target);
     }
 
-    if (pair < target && right != NULL) {
+    if (pair < target && right != nullptr) {
         return right->find_node(target);
     }
 
-    return NULL;
+    return nullptr;
 }
 
 /**
  * Return the floor node of the target.
  * If it does not exist, return NULL. 
  */
-node* node::floor(rb_entry target) {
+node* node::floor(const rb_entry& target) {
     if (pair == target) {
         return this;
     }
 
-    if (pair > target && left != NULL) {
+    if (pair > target && left != nullptr) {
         return left->floor(target);
     }
 
-    if (right != NULL) {
+    if (right != nullptr) {
         node* x = right->floor(target);
-        if (x != NULL && x->pair <= target) {
+        if (x != nullptr && x->pair <= target) {
             return x;
         }
     }
@@ -93,7 +94,7 @@ node* node::floor(rb_entry target) {
  * by fixing any violated Red Black Tree invariations.
 */
 void node::insert(rb_entry new_pair) {
-    node* inserted = insert_node(new_pair);
+    node* inserted = insert_node(std::move(new_pair));
     inserted->fix_insert();
     color = BLACK;
 }
@@ -103,14 +104,14 @@ void node::insert(rb_entry new_pair) {
  * using a standard binary search tree insertion.
  * Return a pointer to inserted node.
  */
-node* node::insert_node(rb_entry new_pair) {
+node* node::insert_node(const rb_entry& new_pair) {
     if (new_pair == pair) {
         pair = new_pair;
         return this;
     }
 
     if (new_pair < pair) {
-        if (left == NULL) {
+        if (left == nullptr) {
             node* left_child = new node(new_pair);
             left_child->parent = this;
             left = left_child;
@@ -119,7 +120,7 @@ node* node::insert_node(rb_entry new_pair) {
         return left->insert_node(new_pair);
     }
 
-    if (right == NULL) {
+    if (right == nullptr) {
         node* right_child = new node(new_pair);
         right_child->parent = this;
         right = right_child;
@@ -185,21 +186,21 @@ void node::fix_insert() {
  * Do the actual deletion while fixing the tree.
  * Returns if the whole tree got deleted.
 */
-bool node::remove(rb_entry target) {
+bool node::remove(const rb_entry& target) {
     node* to_remove = find_node(target);
-    if (to_remove == NULL) {
+    if (to_remove == nullptr) {
         return false;
     }
 
     // If to_remove has both children, we swap it with its inorder successor
     // which is a leaf and thus must have 0 or 1 children.
-    if (to_remove->left != NULL && to_remove->right != NULL) {
+    if (to_remove->left != nullptr && to_remove->right != nullptr) {
         node* next_greater = to_remove->right->find_min();
         to_remove->pair = next_greater->pair;
         to_remove = next_greater;
     }
 
-    if (to_remove->parent == NULL && to_remove->left == NULL && to_remove->right == NULL) {
+    if (to_remove->parent == nullptr && to_remove->left == nullptr && to_remove->right == nullptr) {
         delete_tree();
         return true;
     }
@@ -216,17 +217,17 @@ bool node::remove(rb_entry target) {
  */
 void node::remove_node() {
     if (color == RED || get_color(left) == RED || get_color(right) == RED) {
-        node* child = (left != NULL) ? left : right;
+        node* child = (left != nullptr) ? left : right;
 
-        if (parent == NULL) {
+        if (parent == nullptr) {
             pair = child->pair;
             left = child->left;
             right = child->right;
-            if (child->left != NULL) {
+            if (child->left != nullptr) {
                 child->left->parent = this;
             }
 
-            if (child->right != NULL) {
+            if (child->right != nullptr) {
                 child->right->parent = this;
             }
             return; 
@@ -238,7 +239,7 @@ void node::remove_node() {
             parent->right = child;
         }
 
-        if (child != NULL) {
+        if (child != nullptr) {
             child->parent = parent;
             child->color = BLACK;
         }
@@ -247,11 +248,11 @@ void node::remove_node() {
         return;
     }
 
-    node* sibling = NULL;
+    node* sibling = nullptr;
     node* curr = this;
     curr->color = DOUBLE_BLACK;
 
-    while (curr->parent != NULL && curr->color == DOUBLE_BLACK) {
+    while (curr->parent != nullptr && curr->color == DOUBLE_BLACK) {
         if (curr == curr->parent->left) {
             sibling = curr->parent->right;
 
@@ -318,15 +319,15 @@ void node::remove_node() {
         }
     }
 
-    if (parent == NULL) {
+    if (parent == nullptr) {
         delete this;
         return;
     }
 
-    if (parent->left != NULL && this == parent->left) {
-        parent->left = NULL;
-    } else if (parent->right != NULL && this == parent->right) {
-        parent->right = NULL;
+    if (parent->left != nullptr && this == parent->left) {
+        parent->left = nullptr;
+    } else if (parent->right != nullptr && this == parent->right) {
+        parent->right = nullptr;
     }
 
     delete this;
@@ -336,13 +337,13 @@ void node::remove_node() {
  * Return all stored key-values pairs in an inorder fashion.
  */
 void node::in_order(std::vector<rb_entry>& nodes, bool delete_node) const {
-    if (left != NULL) {
+    if (left != nullptr) {
         left->in_order(nodes, delete_node);
     } 
 
     nodes.push_back(pair);
 
-    if (right != NULL) {
+    if (right != nullptr) {
         right->in_order(nodes, delete_node);
     }
 
@@ -359,7 +360,7 @@ void node::in_order(std::vector<rb_entry>& nodes, bool delete_node) const {
 node* node::find_min() {
     node* tmp = this;
     
-    while (tmp->left != NULL) {
+    while (tmp->left != nullptr) {
         tmp = tmp->left;
     } 
     
@@ -370,7 +371,7 @@ node* node::find_min() {
  * Set curr to the new color if curr is not NULL
  */
 void node::set_color(node* curr, colors new_color) {
-    if (curr != NULL) {
+    if (curr != nullptr) {
         curr->color = new_color;
     }
 }
@@ -380,7 +381,7 @@ void node::set_color(node* curr, colors new_color) {
  * All NULL nodes are default BLACK
  */
 node::colors node::get_color(node* curr) {
-    if (curr == NULL) {
+    if (curr == nullptr) {
         return BLACK;
     } 
     return curr->color;
@@ -397,7 +398,7 @@ void node::rotate_left() {
     node* y = right;
 
     node* left_child = new node(pair);
-    if (left != NULL) {
+    if (left != nullptr) {
         //left_child->left = new node(left);
         left_child->left = left;
         left_child->left->parent = left_child;
@@ -405,14 +406,14 @@ void node::rotate_left() {
     }
     
     left_child->right = y->left;
-    if (left_child->right != NULL) {
+    if (left_child->right != nullptr) {
         left_child->right->parent = left_child;
     }
 
     left_child->parent = this;
     left_child->color = color;
     
-    if (right->right != NULL) {
+    if (right->right != nullptr) {
         right->right->parent = this;
     }
 
@@ -420,7 +421,7 @@ void node::rotate_left() {
     color = y->color;
     left = left_child;
     right = y->right;
-    if (right != NULL) {
+    if (right != nullptr) {
         right->parent = this;
     }
 
@@ -438,7 +439,7 @@ void node::rotate_right() {
     node* y = left;
 
     node* right_child = new node(pair);
-    if (right != NULL) {
+    if (right != nullptr) {
         //right_child->right = new node(right);
         right_child->right = right;
         right_child->right->parent = right_child;
@@ -446,14 +447,14 @@ void node::rotate_right() {
     }
 
     right_child->left = y->right;
-    if (right_child->left != NULL) {
+    if (right_child->left != nullptr) {
         right_child->left->parent = right_child;
     }
 
     right_child->parent = this;
     right_child->color = color;
 
-    if (left->left != NULL) {
+    if (left->left != nullptr) {
         left->left->parent = this;
     }
 
@@ -461,7 +462,7 @@ void node::rotate_right() {
     color = y->color;
     right = right_child; 
     left = y->left;
-    if (left != NULL) {
+    if (left != nullptr) {
         left->parent = this;
     }
     delete y;
@@ -469,7 +470,7 @@ void node::rotate_right() {
 
 void node::print_2d(int space) const {
     space += 4;
-    if (right != NULL) {
+    if (right != nullptr) {
         right->print_2d(space);
     }
 
@@ -479,17 +480,17 @@ void node::print_2d(int space) const {
     }
     std::cout << pair.key << ":" << color << std::endl;
 
-    if (left != NULL) {
+    if (left != nullptr) {
         left->print_2d(space);
     }
 }
 
 void node::check_for_errors(bool is_root) {
-    if (right != NULL) {
+    if (right != nullptr) {
         right->check_for_errors(false);
     }
 
-    if (left != NULL) {
+    if (left != nullptr) {
         left->check_for_errors(false);
     }
 

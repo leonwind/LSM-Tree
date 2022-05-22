@@ -2,3 +2,7 @@ a.out
 *.gch
 *.dSYM
 .cache/**
+
+cmake-build-debug/
+
+.idea

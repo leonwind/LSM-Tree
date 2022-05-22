@@ -19,7 +19,7 @@ class node {
         node* parent;
 
         std::string segment;
-        int offset;
+        int offset{};
 
         node(rb_entry data, bool is_root);
 
@@ -27,11 +27,11 @@ class node {
 
         void insert(rb_entry new_pair);
 
-        bool remove(rb_entry target);
+        bool remove(const rb_entry& target);
 
-        node* find_node(rb_entry target);
+        node* find_node(const rb_entry& target);
 
-        node* floor(rb_entry target);
+        node* floor(const rb_entry& target);
 
         void in_order(std::vector<rb_entry>& nodes, bool delete_node) const;
 
@@ -42,7 +42,7 @@ class node {
         std::string to_str() const;
 
     private:
-        node* insert_node(rb_entry new_pair);
+        node* insert_node(const rb_entry& new_pair);
 
         void fix_insert();
 

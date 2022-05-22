@@ -1,5 +1,4 @@
 #include "lsm_tree.hpp"
-#include <fstream>
 #include <ios>
 #include <iostream>
 #include <string>
@@ -12,10 +11,10 @@
  * e.g. Sparsity Counter.
  */
 
-const std::string BASE = "../src/.internal_storage/";
-const std::string lsm_tree::MEMTABLE_PATH = BASE + "memtable.bckup";
-const std::string lsm_tree::WAL_PATH = BASE + "wal.log";
-const std::string lsm_tree::SEGMENT_BASE = BASE + "segments/";
+const std::string BASE{"../src/.internal_storage/"};
+const std::string lsm_tree::MEMTABLE_PATH{BASE + "memtable.bckup"};
+const std::string lsm_tree::WAL_PATH{BASE + "wal.log"};
+const std::string lsm_tree::SEGMENT_BASE{BASE + "segments/"};
 
 
 lsm_tree::lsm_tree(): bloom(BLOOM_SIZE), memtable(), index(), wal(WAL_PATH) {
@@ -25,7 +24,7 @@ lsm_tree::lsm_tree(): bloom(BLOOM_SIZE), memtable(), index(), wal(WAL_PATH) {
     restore_db();
 }
 
-lsm_tree::~lsm_tree() {}
+lsm_tree::~lsm_tree() = default;
 
 /**
  * Insert a new kv-pair into the database:
@@ -35,7 +34,7 @@ lsm_tree::~lsm_tree() {}
  * 2. Write kv-pair to WAL.
  * 3. Insert into memtable.
  */
-void lsm_tree::put(std::string key, std::string value) {
+void lsm_tree::put(const std::string& key, const std::string& value) {
     kv_pair entry = {key, value};
 
     if (memtable.size + key.size() + value.size() > 5) {
@@ -55,13 +54,13 @@ void lsm_tree::put(std::string key, std::string value) {
  * 3. If the key is set in the bloom filter, use the Sparse Index to find the possible
  * range and search it in there.
  */
-std::string lsm_tree::get(std::string key) {
+std::string lsm_tree::get(const std::string& key) {
     std::string val = memtable.get(key);
     if (val == TOMBSTONE) {
         return "";
     }
 
-    if (val != "") {
+    if (!val.empty()) {
         return val;
     }
 
@@ -83,13 +82,8 @@ std::string lsm_tree::get(std::string key) {
     return "";
 }
 
-void lsm_tree::remove(std::string key) {
+void lsm_tree::remove(const std::string& key) {
     put(key, TOMBSTONE);
-}
-
-std::vector<kv_pair> lsm_tree::range(std::string start, size_t len) {
-    std::vector<kv_pair> pairs;
-    return pairs;
 }
 
 /**
@@ -139,8 +133,8 @@ void lsm_tree::flush_memtable_to_disk() {
     segment_i++;
 }
 
-std::pair<bool, std::string> lsm_tree::search_all_segments(std::string target) {
-    for (std::string curr_path : segments) {
+std::pair<bool, std::string> lsm_tree::search_all_segments(const std::string& target) {
+    for (const std::string& curr_path : segments) {
         auto res = search_segment(target, curr_path, 0);
         if (res.first) {
             return res;
@@ -149,7 +143,7 @@ std::pair<bool, std::string> lsm_tree::search_all_segments(std::string target) {
     return std::make_pair(false, "");
 }
 
-std::pair<bool, std::string> lsm_tree::search_segment(std::string target, std::string path, int64_t offset = 0) {
+std::pair<bool, std::string> lsm_tree::search_segment(const std::string& target, const std::string& path, int64_t offset = 0) {
     std::ifstream segment(path, std::ios_base::in);
 
     if (segment.is_open()) {
@@ -157,7 +151,7 @@ std::pair<bool, std::string> lsm_tree::search_segment(std::string target, std::s
         std::string line, key;
 
         while (std::getline(segment, line)) {
-            size_t seperator_pos = line.find(",");
+            size_t seperator_pos = line.find(',');
             key = line.substr(0, seperator_pos);
 
             if (target == key) {
@@ -205,7 +199,7 @@ std::string lsm_tree::get_new_segment_path(int64_t i) {
 /**
  * Converts a kv-pair into a comma seperated newline log entry.
  */
-std::string lsm_tree::pair_to_log_entry(kv_pair pair) {
+std::string lsm_tree::pair_to_log_entry(const kv_pair& pair) {
     return pair.key + "," + pair.val + "\n";
 }
 

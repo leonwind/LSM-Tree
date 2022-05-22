@@ -20,7 +20,7 @@ class red_black_tree {
 
         void insert(kv_pair new_pair, int64_t segment, int64_t offset);
 
-        void remove(std::string target);
+        void remove(const std::string& target);
 
         bool exists(std::string target) const;
 
@@ -37,7 +37,7 @@ class red_black_tree {
     private:
         node* root;
 
-        void insert(rb_entry data);
+        void insert(const rb_entry& data);
 };
 
 #endif // RED_BLACK_H

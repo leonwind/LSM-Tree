@@ -10,11 +10,11 @@
 class write_ahead_log {
     
     public:
-        write_ahead_log(std::string filename);
+        write_ahead_log(const std::string& filename);
 
         ~write_ahead_log();
 
-        void append(std::string content);
+        void append(const std::string& content);
 
         void clear();
 
