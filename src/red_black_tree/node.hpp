@@ -1,7 +1,7 @@
 #ifndef NODE_H
 #define NODE_H 
 
-#include "../types.hpp"
+#include "../utils/types.hpp"
 #include "data.hpp"
 #include <string>
 #include <vector>

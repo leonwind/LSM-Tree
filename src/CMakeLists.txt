@@ -1,2 +1,2 @@
-file(GLOB_RECURSE lsm_tree_SRC "*.hpp" "*.cpp")
-add_executable(lsm_tree ${lsm_tree_SRC})
+file(GLOB_RECURSE srcs "*.hpp" "*.cpp")
+add_executable(kv_store ${srcs})

@@ -1,7 +1,7 @@
 #ifndef DATA_H 
 #define DATA_H 
 
-#include "../types.hpp"
+#include "../utils/types.hpp"
 #include <string>
 
 struct rb_entry {
@@ -35,7 +35,7 @@ struct rb_entry {
         this->offset = offset;
     }
 
-    rb_entry(){};
+    rb_entry()= default;;
 
     bool operator!=(const rb_entry& other) const {return key != other.key;}
     bool operator==(const rb_entry& other) const {return key == other.key;}

@@ -1,7 +1,7 @@
 #ifndef WAL_H
 #define WAL_H
 
-#include "../types.hpp"
+#include "../utils/types.hpp"
 #include <iostream>
 #include <fstream>
 #include <string>

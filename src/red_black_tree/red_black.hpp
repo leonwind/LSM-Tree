@@ -3,7 +3,7 @@
 
 #include "data.hpp"
 #include "node.hpp"
-#include "../types.hpp"
+#include "../utils/types.hpp"
 #include <cstdint>
 #include <vector>
 

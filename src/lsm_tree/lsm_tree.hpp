@@ -1,7 +1,7 @@
 #ifndef LSM_TREE_H
 #define LSM_TREE_H
 
-#include "../types.hpp"
+#include "../utils/types.hpp"
 #include "../bloom_filter/bloom.hpp"
 #include "../red_black_tree/red_black.hpp"
 #include "../wal/wal.hpp"

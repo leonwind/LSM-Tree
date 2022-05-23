@@ -1,7 +1,7 @@
 #ifndef BLOOM_H
 #define BLOOM_H
 
-#include "../types.hpp"
+#include "../utils/types.hpp"
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
 #include <string>
 
