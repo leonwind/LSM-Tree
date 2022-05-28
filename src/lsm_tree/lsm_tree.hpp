@@ -5,6 +5,7 @@
 #include "../bloom_filter/bloom.hpp"
 #include "../red_black_tree/red_black.hpp"
 #include "../wal/wal.hpp"
+#include "level/level.hpp"
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -35,7 +36,8 @@ class lsm_tree {
         bloom_filter bloom; 
         red_black_tree memtable;
         red_black_tree index;
-        std::vector<std::string> segments;
+        // sorted string tables (SST)
+        std::vector<level> segments;
         write_ahead_log wal;
 
         int64_t segment_i;

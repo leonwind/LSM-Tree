@@ -4,13 +4,6 @@
 #include <string>
 #include <utility>
 
-/**
- * Main functionality of the LSM Tree.
- * Supports put, get, and remove operation.
- * Some ideas for the implementation from https://github.com/chrislessard/LSM-Tree/blob/master/src/lsm_tree.py
- * e.g. Sparsity Counter.
- */
-
 const std::string BASE{"../src/.internal_storage/"};
 const std::string lsm_tree::MEMTABLE_PATH{BASE + "memtable.bckup"};
 const std::string lsm_tree::WAL_PATH{BASE + "wal.log"};
