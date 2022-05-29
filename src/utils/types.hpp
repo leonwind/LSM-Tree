@@ -23,6 +23,10 @@ struct kv_pair {
     bool operator<(const entry& other) const {return std::stoi(key) < std::stoi(other.key);}
     bool operator>(const entry& other) const {return std::stoi(key) > std::stoi(other.key);}
     */
+
+    std::string to_log_entry() const {
+        return key + "," + val + "\n";
+    }
 };
 
 #endif // TYPES_H

@@ -11,24 +11,27 @@
 class level {
 
     public:
-        level(const std::string &path, size_t max_size, const bloom_filter &filter);
+        level(const std::string &path, const bloom_filter &filter);
+
+        level(const std::string &path, long bloom_size, red_black_tree &memtable);
+
+        level(const std::string &path, level &sst_a, level &sst_b, long bloom_size);
 
         ~level() = default;
-
-        level merge(const level& other);
 
         std::optional<std::string> search(const std::string& key);
 
     private:
+        static const uint64_t SPARSITY_FACTOR{1000};
+
         std::string path;
-        size_t max_size;
-        size_t curr_size{0};
-        bloom_filter filter;
+        bloom_filter bloom;
         red_black_tree index;
 
+        void create_sst_from_memtable(red_black_tree& memtable);
+
         static std::queue<kv_pair> get_kv_pairs(const std::string& path);
-        static std::pair<bloom_filter, std::queue<kv_pair>> merge_sst_values(
-                std::queue<kv_pair>& queue_a, std::queue<kv_pair>& queue_b);
+        void merge_sst_values(const level& sst_a, const level& sst_b);
 };
 
 #endif // LEVEL_H

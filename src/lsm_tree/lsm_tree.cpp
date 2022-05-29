@@ -36,7 +36,7 @@ void lsm_tree::put(const std::string& key, const std::string& value) {
         wal.clear();
     }
 
-    wal.append(pair_to_log_entry(entry));
+    wal.append(entry.to_log_entry());
     memtable.insert(entry);
 }
 
@@ -99,30 +99,8 @@ void lsm_tree::compact() {
  * order in a new segment file.
  */
 void lsm_tree::flush_memtable_to_disk() {
-    std::string curr_segment = get_new_segment_path(segment_i);
-
-    std::ofstream segment;
-    segment.open(curr_segment);
-
-    int64_t key_offset = 0;
-
-    for (auto& rb_nodes : memtable.get_and_delete_all_nodes()) {
-        kv_pair pair = {rb_nodes.key, rb_nodes.val};
-        bloom.set(rb_nodes.key);
-
-        // Insert every Sparsity_factor'th node into the index
-        if (sparsity_counter++ % SPARSITY_FACTOR == 0) {
-            index.insert(pair, segment_i, key_offset);
-            sparsity_counter = 0;
-        }
-
-        std::string log_entry = pair_to_log_entry(pair);
-        segment << log_entry << std::flush;
-
-        key_offset += log_entry.size();
-    }
-
-    segments.push_back(curr_segment);
+    level sst = level(get_new_segment_path(segment_i), memtable.size, memtable);
+    segments.push_back(sst);
     segment_i++;
 }
 
@@ -187,13 +165,6 @@ void lsm_tree::restore_segments() {
 std::string lsm_tree::get_new_segment_path(int64_t i) {
     std::string path{SEGMENT_BASE + std::to_string(i) + ".segment"};
     return path;
-}
-
-/**
- * Converts a kv-pair into a comma seperated newline log entry.
- */
-std::string lsm_tree::pair_to_log_entry(const kv_pair& pair) {
-    return pair.key + "," + pair.val + "\n";
 }
 
 void lsm_tree::reset_sparsity_counter() {
