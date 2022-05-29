@@ -26,22 +26,15 @@ class lsm_tree {
         void clear();
 
     private:
-        static const uint64_t BLOOM_SIZE{1000000};
         static const uint64_t MEMTABLE_SIZE{1000};
-        static const uint64_t SPARSITY_FACTOR{1000};
         static const std::string MEMTABLE_PATH;
         static const std::string WAL_PATH;
         static const std::string SEGMENT_BASE;
 
-        bloom_filter bloom; 
         red_black_tree memtable;
-        red_black_tree index;
-        // sorted string tables (SST)
         std::vector<level> segments;
         write_ahead_log wal;
-
         int64_t segment_i;
-        int64_t sparsity_counter;
 
         void flush_memtable_to_disk();
 
@@ -53,15 +46,9 @@ class lsm_tree {
 
         void compact();
 
-        std::pair<bool, std::string> search_all_segments(const std::string& target);
-
-        static std::pair<bool, std::string> search_segment(const std::string& target, const std::string& path, int64_t offset);
-
-        static std::string pair_to_log_entry(const kv_pair& entry);
+        std::optional<std::string> search_all_segments(const std::string& target);
 
         static std::string get_new_segment_path(int64_t i);
-
-        void reset_sparsity_counter();
 };
 
 #endif // LSM_TREE_H

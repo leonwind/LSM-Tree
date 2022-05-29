@@ -19,7 +19,7 @@ class level {
 
         ~level() = default;
 
-        std::optional<std::string> search(const std::string& key);
+        std::optional<std::string> search(const std::string& target);
 
     private:
         static const uint64_t SPARSITY_FACTOR{1000};
