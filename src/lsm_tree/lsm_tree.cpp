@@ -41,17 +41,18 @@ void lsm_tree::put(const std::string& key, const std::string& value) {
  * 2. If not, check each segment individually using a bloom filter quickly.
  */
 std::string lsm_tree::get(const std::string& key) {
-    std::string val = memtable.get(key);
-    if (val == TOMBSTONE) {
+    std::optional<std::string> val = memtable.get(key);
+
+    if (val->empty()) {
+        std::optional<std::string> ans = search_all_segments(key);
+        return ans.has_value() ? ans.value() : "";
+    }
+
+    if (val.value() == TOMBSTONE) {
         return "";
     }
 
-    if (!val.empty()) {
-        return val;
-    }
-
-    std::optional<std::string> ans = search_all_segments(key);
-    return ans.has_value() ? ans.value() : "";
+    return val.value();
 }
 
 void lsm_tree::remove(const std::string& key) {
@@ -63,7 +64,7 @@ void lsm_tree::remove(const std::string& key) {
  * TODO
  */
 void lsm_tree::clear() {
-
+    memtable.delete_tree();
 }
 
 /**

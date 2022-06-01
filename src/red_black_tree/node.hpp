@@ -21,9 +21,9 @@ class node {
         std::string segment;
         int offset{};
 
-        node(rb_entry data, bool is_root);
+        node(const rb_entry& data, bool is_root);
 
-        node(node* ptr);
+        explicit node(node* ptr);
 
         void insert(rb_entry new_pair);
 

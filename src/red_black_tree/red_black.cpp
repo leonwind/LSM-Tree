@@ -1,7 +1,6 @@
 #include "red_black.hpp"
 #include "data.hpp"
 #include "node.hpp"
-#include <cstdint>
 #include <iostream>
 #include <utility>
 
@@ -11,6 +10,10 @@ red_black_tree::red_black_tree() {
 }
 
 red_black_tree::~red_black_tree() {
+   delete_tree();
+}
+
+void red_black_tree::delete_tree() {
     if (root != nullptr) {
         root->delete_tree();
     }
@@ -22,12 +25,6 @@ void red_black_tree::insert(kv_pair new_pair) {
     insert(data); 
 }
 
-// Insert method for the Sparse Index RB tree
-void red_black_tree::insert(kv_pair new_pair, int64_t segment, int64_t offset) {
-    rb_entry data = rb_entry{std::move(new_pair), segment, offset};
-    insert(data);
-}
-
 void red_black_tree::insert(const rb_entry& data) {
     if (root == nullptr) {
         root = new node(data, true);
@@ -36,12 +33,12 @@ void red_black_tree::insert(const rb_entry& data) {
     }
     // TODO: Only update the size if the key is not in the tree yet, otherwise only
     // update with difference between the old and the new value.
-    size += data.key.size() + data.val.size();
+    size += data.key.size();// + data.val.size();
 }
 
 void red_black_tree::remove(const std::string& target) {
     if (root != nullptr) {
-        bool root_deleted = root->remove({target});
+        bool root_deleted = root->remove({target, ""});
         if (root_deleted) {
             root = nullptr;
         }
@@ -54,23 +51,26 @@ void red_black_tree::remove(const std::string& target) {
 
 bool red_black_tree::exists(std::string target) const {
     if (root != nullptr) {
-        return root->find_node({std::move(target)}) != nullptr;
+        return root->find_node(rb_entry{std::move(target)}) != nullptr;
     }
     return false;
 }
 
-std::string red_black_tree::get(std::string target) const {
+std::optional<std::string> red_black_tree::get(std::string target) const {
     if (root != nullptr) {
-        node* x = root->find_node({std::move(target)});
-        return x == nullptr ? "" : x->pair.val;
+        node* x = root->find_node(rb_entry{std::move(target)});
+        if (x == nullptr) {
+            return {};
+        }
+        return std::any_cast<std::string>(x->pair.val.value());
     }
-    return "";
+    return {};
 }
 
 // Return the node which is the next smallest one if target does not exist
 rb_entry red_black_tree::floor(std::string target) const {
     if (root != nullptr) {
-        node* x = root->floor({std::move(target)});
+        node* x = root->floor(rb_entry{std::move(target)});
         return x == nullptr ? rb_entry{""} : x->pair;
     }
     return rb_entry{""};

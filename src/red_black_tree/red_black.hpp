@@ -6,6 +6,7 @@
 #include "../utils/types.hpp"
 #include <cstdint>
 #include <vector>
+#include <optional>
 
 class red_black_tree {
 
@@ -16,15 +17,15 @@ class red_black_tree {
 
         ~red_black_tree();
 
-        void insert(kv_pair new_pair);
+        void delete_tree();
 
-        void insert(kv_pair new_pair, int64_t segment, int64_t offset);
+        void insert(kv_pair new_pair);
 
         void remove(const std::string& target);
 
         bool exists(std::string target) const;
 
-        std::string get(std::string target) const;
+        std::optional<std::string> get(std::string target) const;
 
         rb_entry floor(std::string target) const;
 

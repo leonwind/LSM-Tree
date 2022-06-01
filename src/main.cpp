@@ -19,15 +19,15 @@ void test_bloom_filter() {
 void test_red_black_tree() {
     red_black_tree rb_tree;
 
-    rb_tree.insert({"8", ""});
-    rb_tree.insert({"18", ""});
-    rb_tree.insert({"5", ""});
-    rb_tree.insert({"15", ""});
-    rb_tree.insert({"17", ""});
-    rb_tree.insert({"25", ""});
-    rb_tree.insert({"40", ""});
-    rb_tree.insert({"80", ""});
-    rb_tree.insert({"19", ""});
+    rb_tree.insert(kv_pair{"8", ""});
+    rb_tree.insert(kv_pair{"18", ""});
+    rb_tree.insert(kv_pair{"5", ""});
+    rb_tree.insert(kv_pair{"15", ""});
+    rb_tree.insert(kv_pair{"17", ""});
+    rb_tree.insert(kv_pair{"25", ""});
+    rb_tree.insert(kv_pair{"40", ""});
+    rb_tree.insert(kv_pair{"80", ""});
+    rb_tree.insert(kv_pair{"19", ""});
     rb_tree.remove("25");
     rb_tree.remove("8");
     rb_tree.remove("17");

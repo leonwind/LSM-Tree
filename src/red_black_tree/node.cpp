@@ -6,8 +6,8 @@
 #include <utility>
 
 
-node::node(rb_entry data, bool is_root = false) {
-    pair = std::move(data);
+node::node(const rb_entry& data, bool is_root = false) {
+    pair = data;
 
     left = nullptr;
     right = nullptr;
