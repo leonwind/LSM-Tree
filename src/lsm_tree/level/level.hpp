@@ -7,6 +7,7 @@
 #include <string>
 #include <queue>
 #include <ios>
+#include <filesystem>
 
 class level {
 
@@ -21,6 +22,8 @@ class level {
 
         std::optional<std::string> search(const std::string& target);
 
+        static void delete_all_segments(const std::string& path);
+
     private:
         static const uint64_t SPARSITY_FACTOR{1000};
 
@@ -32,6 +35,8 @@ class level {
 
         static std::queue<kv_pair> get_kv_pairs(const std::string& path);
         void merge_sst_values(const level& sst_a, const level& sst_b);
+
+    static void print_queue(std::queue<kv_pair> queue1);
 };
 
 #endif // LEVEL_H

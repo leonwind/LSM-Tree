@@ -23,7 +23,7 @@ void bloom_filter::set(const std::string& key) {
 bool bloom_filter::is_set(const std::string& key) const {
     uint64_t k = string_to_uint64(key);
 
-    return table.test(hash_1(k)) 
+    return table.test(hash_1(k))
         && table.test(hash_2(k)) 
         && table.test(hash_3(k));
 }

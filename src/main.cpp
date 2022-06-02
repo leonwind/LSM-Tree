@@ -38,6 +38,7 @@ enum commands {
     PUT,
     GET,
     DELETE,
+    DROP,
     EXIT,
     NONE,
 };
@@ -46,6 +47,7 @@ commands cmd_to_enum(const std::string& in_str) {
     if (in_str == "PUT" || in_str == "put") return PUT;
     if (in_str == "GET" || in_str == "get") return GET;
     if (in_str == "DELETE" || in_str == "delete") return DELETE;
+    if (in_str == "DROP" || in_str == "drop") return DROP;
     if (in_str == "EXIT" || in_str == "exit") return EXIT;
     return NONE;
 }
@@ -55,6 +57,7 @@ void command_loop(lsm_tree& db) {
     std::string command;
     std::string key, value;
 
+    db.drop_table();
     while (run) {
         std::cout << "> ";
         std::cin >> command;
@@ -78,6 +81,10 @@ void command_loop(lsm_tree& db) {
             case DELETE:
                 std::cin >> key;
                 db.remove(key);
+                break;
+
+            case DROP:
+                db.drop_table();
                 break;
 
             case EXIT:

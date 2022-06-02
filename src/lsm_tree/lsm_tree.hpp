@@ -11,6 +11,10 @@
 #include <vector>
 #include <optional>
 
+#define MEMTABLE_PATH "../src/.internal_storage/memtable.bckup"
+#define WAL_PATH "../src/.internal_storage/wal.log"
+#define SEGMENT_BASE "../src/.internal_storage/segments/"
+
 class lsm_tree {
 
     public:
@@ -24,16 +28,13 @@ class lsm_tree {
 
         void remove(const std::string& key);
 
-        void clear();
+        void drop_table();
 
     private:
         static const uint64_t MEMTABLE_SIZE{1000};
-        static const std::string MEMTABLE_PATH;
-        static const std::string WAL_PATH;
-        static const std::string SEGMENT_BASE;
 
         red_black_tree memtable;
-        std::vector<level> segments;
+        std::unordered_map<uint16_t, std::vector<level>> segments;
         write_ahead_log wal;
         int64_t segment_i;
 
