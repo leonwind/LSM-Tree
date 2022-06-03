@@ -3,13 +3,9 @@
 #include <iostream>
 #include <fstream>
 
-level::level(const std::string &path, const bloom_filter &filter)
-        : bloom(filter) {
-    this->path = path;
-}
 
 level::level(const std::string &path, long bloom_size, red_black_tree &memtable)
-        : bloom(bloom_size) {
+        : bloom(bloom_size), index() {
     this->path = path;
 
     create_sst_from_memtable(memtable);
@@ -43,14 +39,18 @@ void level::create_sst_from_memtable(red_black_tree &memtable) {
 }
 
 std::optional<std::string> level::search(const std::string &target) {
+    if (not bloom.is_set(target)) {
+        return {};
+    }
+
     std::optional<rb_entry> opt_floor_node = index.floor(target);
     if (not opt_floor_node.has_value()) {
         return {};
     }
+
     auto floor_node = opt_floor_node.value();
 
     std::ifstream sst(path, std::ios_base::in);
-
     if (sst.is_open()) {
         sst.seekg(std::any_cast<long>(floor_node.val), std::ios_base::beg);
         std::string line, key;
@@ -99,9 +99,7 @@ std::queue<kv_pair> level::get_kv_pairs(const std::string& path) {
  */
 void level::merge_sst_values(const level& sst_a, const level& sst_b) {
     auto queue_a = get_kv_pairs(sst_a.path);
-    print_queue(queue_a);
     auto queue_b = get_kv_pairs(sst_b.path);
-    print_queue(queue_b);
 
     std::ofstream sst;
     sst.open(path);
@@ -109,6 +107,7 @@ void level::merge_sst_values(const level& sst_a, const level& sst_b) {
     kv_pair next_pair;
     uint64_t sparsity_i{0};
 
+    std::cout << "Start merging " << sst_a.path << " with " << sst_b.path << std::endl;
     while ((not queue_a.empty()) or (not queue_b.empty())) {
 
         if (queue_b.empty() or queue_a.front() < queue_b.front()) {
@@ -129,6 +128,11 @@ void level::merge_sst_values(const level& sst_a, const level& sst_b) {
 
         sst << next_pair.to_log_entry() << std::flush;
     }
+    std::cout << "Finished merging" << std::endl;
+}
+
+void level::delete_segment_file() {
+    std::filesystem::remove(path);
 }
 
 void level::delete_all_segments(const std::string &path) {

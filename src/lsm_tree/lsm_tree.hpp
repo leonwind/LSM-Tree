@@ -11,7 +11,6 @@
 #include <vector>
 #include <optional>
 
-#define MEMTABLE_PATH "../src/.internal_storage/memtable.bckup"
 #define WAL_PATH "../src/.internal_storage/wal.log"
 #define SEGMENT_BASE "../src/.internal_storage/segments/"
 
@@ -36,7 +35,7 @@ class lsm_tree {
         red_black_tree memtable;
         std::unordered_map<uint16_t, std::vector<level>> segments;
         write_ahead_log wal;
-        int64_t segment_i;
+        int64_t segment_i{0};
 
         void flush_memtable_to_disk();
 

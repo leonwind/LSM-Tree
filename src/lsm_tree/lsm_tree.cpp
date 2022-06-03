@@ -2,7 +2,6 @@
 #include <string>
 
 lsm_tree::lsm_tree(): memtable(), wal(WAL_PATH) {
-    segment_i = 0;
     restore_db();
 }
 
@@ -19,9 +18,11 @@ lsm_tree::~lsm_tree() = default;
 void lsm_tree::put(const std::string& key, const std::string& value) {
     kv_pair entry = {key, value};
 
-    if (memtable.size + key.size() + value.size() >= 3) {
+    if (memtable.size >= 2) {
         compact();
+        std::cout << "FINISHED COMPACTION" << std::endl;
         flush_memtable_to_disk();
+        std::cout << "FLUSHED MEMTABLE TO DISK" << std::endl;
         wal.clear();
     }
 
@@ -37,7 +38,7 @@ void lsm_tree::put(const std::string& key, const std::string& value) {
 std::string lsm_tree::get(const std::string& key) {
     std::optional<std::string> val = memtable.get(key);
 
-    if (val->empty()) {
+    if (not val.has_value()) {
         std::optional<std::string> ans = search_all_segments(key);
         return ans.has_value() ? ans.value() : "";
     }
@@ -64,14 +65,19 @@ void lsm_tree::drop_table() {
 
 /**
  * Merge multiple segments into one.
- * Start with level 0 (smallest SST) and merge 2 SSTs at each level and
- * push them to the next furthest up.
+ * Start with level i = 0 (smallest SST) and merge 2 SSTs at each level and
+ * push the merged one to the next level i + 1.
  */
 void lsm_tree::compact() {
+    // TODO: Store level index seperately since levels can be missing after
+    // merging, e.g. level 0 and level 2 exists but not level 1
     size_t num_levels = segments.size();
 
     for (size_t i = 0; i < num_levels; i++) {
-        auto level_segments = segments[i];
+        if (not segments.contains(i)) {
+            continue;
+        }
+        auto& level_segments = segments[i];
 
         while (level_segments.size() >= 2) {
             level sst_a = level_segments.back();
@@ -81,6 +87,9 @@ void lsm_tree::compact() {
             level_segments.pop_back();
 
             level merged = level(get_new_segment_path(segment_i++), sst_a, sst_b, memtable.size * (i + 1) * 2);
+
+            sst_a.delete_segment_file();
+            sst_b.delete_segment_file();
 
             if (segments.contains(i + 1)) {
                 segments[i + 1].push_back(merged);
@@ -110,6 +119,7 @@ void lsm_tree::flush_memtable_to_disk() {
 std::optional<std::string> lsm_tree::search_all_segments(const std::string& target) {
     size_t num_levels = segments.size();
     for (size_t i = 0; i < num_levels; i++) {
+        std::cout << "CHECK LEVEL i = " << i << std::endl;
         for (level& sst : segments[i]) {
             std::optional<std::string> val = sst.search(target);
             if (val.has_value()) {

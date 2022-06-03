@@ -12,8 +12,6 @@
 class level {
 
     public:
-        level(const std::string &path, const bloom_filter &filter);
-
         level(const std::string &path, long bloom_size, red_black_tree &memtable);
 
         level(const std::string &path, level &sst_a, level &sst_b, long bloom_size);
@@ -21,6 +19,8 @@ class level {
         ~level() = default;
 
         std::optional<std::string> search(const std::string& target);
+
+        void delete_segment_file();
 
         static void delete_all_segments(const std::string& path);
 
@@ -36,7 +36,7 @@ class level {
         static std::queue<kv_pair> get_kv_pairs(const std::string& path);
         void merge_sst_values(const level& sst_a, const level& sst_b);
 
-    static void print_queue(std::queue<kv_pair> queue1);
+        static void print_queue(std::queue<kv_pair> queue1);
 };
 
 #endif // LEVEL_H
