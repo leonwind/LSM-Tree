@@ -43,7 +43,7 @@ void level::create_sst_from_memtable(red_black_tree &memtable) {
     }
 }
 
-std::optional<std::string> level::search(const std::string &target) {
+std::optional<std::string> level::search(const std::string &target) const {
     if (not bloom.is_set(target)) {
         return {};
     }
@@ -124,6 +124,7 @@ void level::merge_sst_values(const level& sst_a, const level& sst_b) {
     kv_pair next_pair;
     uint64_t sparsity_i{0};
 
+    // TODO: Only store one deleted item since both SSTs are already sorted.
     std::unordered_set<std::string> deleted;
 
     while ((not queue_a.empty()) or (not queue_b.empty())) {
@@ -155,6 +156,7 @@ void level::merge_sst_values(const level& sst_a, const level& sst_b) {
 
         sst << next_pair.to_log_entry() << std::flush;
     }
+
     std::cout << "Finished merging" << std::endl;
 }
 

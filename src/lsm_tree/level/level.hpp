@@ -18,7 +18,7 @@ class level {
 
         ~level() = default;
 
-        std::optional<std::string> search(const std::string& target);
+        std::optional<std::string> search(const std::string& target) const;
 
         void delete_segment_file();
 

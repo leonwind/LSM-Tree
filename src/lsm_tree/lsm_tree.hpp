@@ -7,7 +7,7 @@
 #include "../wal/wal.hpp"
 #include "level/level.hpp"
 #include <string>
-#include <unordered_map>
+#include <list>
 #include <vector>
 #include <optional>
 
@@ -33,7 +33,7 @@ class lsm_tree {
         static const uint64_t MEMTABLE_SIZE{1000};
 
         red_black_tree memtable;
-        std::unordered_map<uint16_t, std::vector<level>> segments;
+        std::list<std::pair<uint32_t, std::vector<level>>> segments;
         write_ahead_log wal;
         int64_t segment_i{0};
 
