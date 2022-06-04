@@ -4,7 +4,8 @@
 #include <string>
 
 // Bad solution since this value is not allowed to be used by the user
-#define TOMBSTONE "+++TOMBSTONES+++"
+#define TOMBSTONE "+++TOMBSTONE+++"
+#define SEPERATOR ','
 
 struct kv_pair {
     std::string key;
@@ -12,7 +13,17 @@ struct kv_pair {
 
     bool operator!=(const kv_pair& other) const {return key != other.key;}
     bool operator==(const kv_pair& other) const {return key == other.key;}
-    bool operator<(const kv_pair& other) const {return key < other.key;}
+    bool operator<(const kv_pair& other) const {
+        if (key == other.key) {
+            if (val == TOMBSTONE) {
+                return true;
+            }
+            if (other.val == TOMBSTONE) {
+                return false;
+            }
+        }
+        return key < other.key;
+    }
     bool operator<=(const kv_pair& other) const {return key <= other.key;}
     bool operator>(const kv_pair& other) const {return key > other.key;}
     bool operator>=(const kv_pair& other) const {return key >= other.key;}
@@ -25,7 +36,7 @@ struct kv_pair {
     */
 
     std::string to_log_entry() const {
-        return key + "," + val + "\n";
+        return key + SEPERATOR + val + "\n";
     }
 };
 

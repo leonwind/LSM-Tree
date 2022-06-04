@@ -2,6 +2,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <unordered_set>
 
 
 level::level(const std::string &path, long bloom_size, red_black_tree &memtable)
@@ -15,6 +16,10 @@ level::level(const std::string &path, level &sst_a, level &sst_b, long bloom_siz
         : bloom(bloom_size), index() {
     this->path = path;
     merge_sst_values(sst_a, sst_b);
+}
+
+std::string level::get_name() {
+    return path;
 }
 
 void level::create_sst_from_memtable(red_black_tree &memtable) {
@@ -44,20 +49,26 @@ std::optional<std::string> level::search(const std::string &target) {
     }
 
     std::optional<rb_entry> opt_floor_node = index.floor(target);
-    if (not opt_floor_node.has_value()) {
-        return {};
-    }
+    long start_pos{0};
 
-    auto floor_node = opt_floor_node.value();
+    if (opt_floor_node.has_value()) {
+        start_pos = std::any_cast<long>(opt_floor_node.value());
+    }
 
     std::ifstream sst(path, std::ios_base::in);
     if (sst.is_open()) {
-        sst.seekg(std::any_cast<long>(floor_node.val), std::ios_base::beg);
+        sst.seekg(start_pos, std::ios_base::beg);
         std::string line, key;
 
         while (std::getline(sst, line)) {
-            size_t seperator_pos = line.find(',');
+            size_t seperator_pos = line.find(SEPERATOR);
             key = line.substr(0, seperator_pos);
+
+            if (target < key) {
+                // Since SST is sorted, we can stop when key is greater than
+                // target.
+                return {};
+            }
 
             if (target == key) {
                 return {line.substr(seperator_pos + 1, line.size())};
@@ -70,9 +81,9 @@ std::optional<std::string> level::search(const std::string &target) {
 
 /**
  * Iterate over both files and merge them inside a queue
- * TODO: Merge without storing them in-memory and use iterator over both.
+ * TODO: Merge without storing them in-memory and use iterator over both SSTs.
  */
-std::queue<kv_pair> level::get_kv_pairs(const std::string& path) {
+std::queue<kv_pair> level::get_kv_pairs() const {
     std::queue<kv_pair> kv_pairs{};
     std::ifstream sst(path, std::ios_base::in);
 
@@ -84,7 +95,7 @@ std::queue<kv_pair> level::get_kv_pairs(const std::string& path) {
     std::string key, value;
 
     while (std::getline(sst, line)) {
-        size_t seperator_pos = line.find(',');
+        size_t seperator_pos = line.find(SEPERATOR);
         key = line.substr(0, seperator_pos);
         value = line.substr(seperator_pos + 1, line.size());
 
@@ -98,8 +109,14 @@ std::queue<kv_pair> level::get_kv_pairs(const std::string& path) {
  * Merge two Sorted String Tables and write them sorted to the disk.
  */
 void level::merge_sst_values(const level& sst_a, const level& sst_b) {
-    auto queue_a = get_kv_pairs(sst_a.path);
-    auto queue_b = get_kv_pairs(sst_b.path);
+    std::cout << "Start merging " << sst_a.path << " with " << sst_b.path << std::endl;
+
+    auto queue_a = sst_a.get_kv_pairs();
+    std::cout << "Queue A:" << std::endl;
+    print_queue(queue_a);
+    auto queue_b = sst_b.get_kv_pairs();
+    std::cout << "Queue B:" << std::endl;
+    print_queue(queue_b);
 
     std::ofstream sst;
     sst.open(path);
@@ -107,7 +124,8 @@ void level::merge_sst_values(const level& sst_a, const level& sst_b) {
     kv_pair next_pair;
     uint64_t sparsity_i{0};
 
-    std::cout << "Start merging " << sst_a.path << " with " << sst_b.path << std::endl;
+    std::unordered_set<std::string> deleted;
+
     while ((not queue_a.empty()) or (not queue_b.empty())) {
 
         if (queue_b.empty() or queue_a.front() < queue_b.front()) {
@@ -118,10 +136,19 @@ void level::merge_sst_values(const level& sst_a, const level& sst_b) {
             queue_b.pop();
         }
 
+        if (deleted.contains(next_pair.key)) {
+            continue;
+        }
+
+        if (next_pair.val == TOMBSTONE) {
+            deleted.insert(next_pair.key);
+        }
+
         std::cout << "NEXT PAIR: " << next_pair.to_log_entry() << std::endl;
         bloom.set(next_pair.key);
 
         if (sparsity_i++ == SPARSITY_FACTOR) {
+            std::cout << "Insert into Index" << std::endl;
             index.insert(next_pair);
             sparsity_i = 0;
         }

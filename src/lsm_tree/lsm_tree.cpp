@@ -33,21 +33,20 @@ void lsm_tree::put(const std::string& key, const std::string& value) {
 /**
  * Get a kv-pair from the database.
  * 1. Check if the key is in the memtable.
- * 2. If not, check each segment individually using a bloom filter quickly.
+ * 2. If not, check each segment individually.
  */
 std::string lsm_tree::get(const std::string& key) {
-    std::optional<std::string> val = memtable.get(key);
-
-    if (not val.has_value()) {
-        std::optional<std::string> ans = search_all_segments(key);
-        return ans.has_value() ? ans.value() : "";
+    std::optional<std::string> memtable_val = memtable.get(key);
+    if (memtable_val.has_value()) {
+        return memtable_val.value() == TOMBSTONE ? "" : memtable_val.value();
     }
 
-    if (val.value() == TOMBSTONE) {
-        return "";
+    std::optional<std::string> segment_val = search_all_segments(key);
+    if (segment_val.has_value()) {
+        return segment_val.value() == TOMBSTONE ? "" : segment_val.value();
     }
 
-    return val.value();
+    return "";
 }
 
 void lsm_tree::remove(const std::string& key) {
@@ -86,7 +85,7 @@ void lsm_tree::compact() {
             level sst_b = level_segments.back();
             level_segments.pop_back();
 
-            level merged = level(get_new_segment_path(segment_i++), sst_a, sst_b, memtable.size * (i + 1) * 2);
+            level merged = level(get_new_segment_path(), sst_a, sst_b, memtable.size * (i + 1) * 2);
 
             sst_a.delete_segment_file();
             sst_b.delete_segment_file();
@@ -106,7 +105,7 @@ void lsm_tree::compact() {
  */
 void lsm_tree::flush_memtable_to_disk() {
     // TODO: Size stuff
-    level sst = level(get_new_segment_path(segment_i), memtable.size, memtable);
+    level sst = level(get_new_segment_path(), memtable.size, memtable);
 
     if (segments.contains(0)) {
         segments[0].push_back(sst);
@@ -121,6 +120,7 @@ std::optional<std::string> lsm_tree::search_all_segments(const std::string& targ
     for (size_t i = 0; i < num_levels; i++) {
         std::cout << "CHECK LEVEL i = " << i << std::endl;
         for (level& sst : segments[i]) {
+            std::cout << "Check segment " << sst.get_name() << std::endl;
             std::optional<std::string> val = sst.search(target);
             if (val.has_value()) {
                 return val;
@@ -156,9 +156,8 @@ void lsm_tree::restore_segments() {
 
 /*
  * Create a new unique segment path.
- * TODO
  */
-std::string lsm_tree::get_new_segment_path(int64_t i) {
-    std::string path{SEGMENT_BASE + std::to_string(i) + ".segment"};
+std::string lsm_tree::get_new_segment_path() {
+    std::string path{SEGMENT_BASE + std::to_string(segment_i++) + ".segment"};
     return path;
 }

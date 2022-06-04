@@ -49,7 +49,7 @@ class lsm_tree {
 
         std::optional<std::string> search_all_segments(const std::string& target);
 
-        static std::string get_new_segment_path(int64_t i);
+        std::string get_new_segment_path();
 };
 
 #endif // LSM_TREE_H
