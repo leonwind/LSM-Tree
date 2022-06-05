@@ -57,7 +57,7 @@ void command_loop(lsm_tree& db) {
     std::string command;
     std::string key, value;
 
-    db.drop_table();
+    //db.drop_table();
     while (run) {
         std::cout << "> ";
         std::cin >> command;

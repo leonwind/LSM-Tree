@@ -15,9 +15,7 @@ lsm_tree::~lsm_tree() = default;
  * 3. Insert into memtable.
  */
 void lsm_tree::put(const std::string& key, const std::string& value) {
-    kv_pair entry = {key, value};
-
-    if (memtable.size >= 2) {
+    if (memtable.size >= MEMTABLE_SIZE) {
         compact();
         std::cout << "FINISHED COMPACTION" << std::endl;
         flush_memtable_to_disk();
@@ -25,6 +23,7 @@ void lsm_tree::put(const std::string& key, const std::string& value) {
         wal.clear();
     }
 
+    kv_pair entry = {key, value};
     wal.append(entry.to_log_entry());
     memtable.insert(entry);
 }
@@ -48,6 +47,12 @@ std::string lsm_tree::get(const std::string& key) {
     return "";
 }
 
+/**
+ * To remove a value from the database, we just insert the key
+ * with the TOMBSTONE value.
+ * Since we are searching from Memtable -> latest segment, retrieval will find
+ * the {key, TOMBSTONE} pair first and knows it got deleted.
+ */
 void lsm_tree::remove(const std::string& key) {
     put(key, TOMBSTONE);
 }
@@ -60,7 +65,6 @@ void lsm_tree::drop_table() {
     level::delete_all_segments(SEGMENT_BASE);
     wal.clear();
 }
-
 
 /**
  * Delete the in memory table and store all key values pair in a sorted
@@ -119,6 +123,7 @@ std::optional<std::string> lsm_tree::search_all_segments(const std::string& targ
             }
         }
     }
+
     return {};
 }
 
@@ -133,10 +138,10 @@ void lsm_tree::restore_db() {
 
 /**
  * Restore a memtable from its WAL. 
- * TODO
  */
 void lsm_tree::restore_memtable() {
-
+    std::cout << "Restore memtable" << std::endl;
+    wal.repopulate_memtable(memtable);
 }
 
 /**
