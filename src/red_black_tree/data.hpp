@@ -6,6 +6,7 @@
 #include <any>
 #include <utility>
 #include <optional>
+#include <typeinfo>
 
 struct rb_entry {
     std::string key;
@@ -32,14 +33,18 @@ struct rb_entry {
 
     rb_entry()= default;;
 
-    /*
-    bool operator!=(const rb_entry& other) const {return key != other.key;}
-    bool operator==(const rb_entry& other) const {return key == other.key;}
-    bool operator<(const rb_entry& other) const {return key < other.key;}
-    bool operator<=(const rb_entry& other) const {return key <= other.key;}
-    bool operator>(const rb_entry& other) const {return key > other.key;}
-    bool operator>=(const rb_entry& other) const {return key >= other.key;}
-    */
+    uint64_t size() const {
+        if (not val.has_value()) {
+            return key.size();
+        }
+
+        if (val.value().type() == typeid(std::string)) {
+            return key.size() + std::any_cast<std::string>(val.value()).size();
+        } else {
+            // If val is not a string, it is an uint64_t ( = 8 Byte)
+            return key.size() + 8;
+        }
+    }
 
     std::strong_ordering operator<=>(const rb_entry& other) const {
         if (key == other.key) {

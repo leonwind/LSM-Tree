@@ -18,16 +18,13 @@ class node {
         node* right;
         node* parent;
 
-        std::string segment;
-        int offset{};
-
         node(const rb_entry& data, bool is_root);
 
         explicit node(node* ptr);
 
-        void insert(rb_entry new_pair);
+        int64_t insert(const rb_entry& new_pair);
 
-        bool remove(const rb_entry& target);
+        bool remove(node* to_remove);
 
         node* find_node(const rb_entry& target);
 
@@ -42,7 +39,7 @@ class node {
         std::string to_str() const;
 
     private:
-        node* insert_node(const rb_entry& new_pair);
+        std::pair<int64_t, node*> insert_node(const rb_entry& new_pair);
 
         void fix_insert();
 

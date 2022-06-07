@@ -92,11 +92,16 @@ node* node::floor(const rb_entry& target) {
  * Insert a new key value pair in the tree.
  * Run first a normal bst insertion and then fix the tree
  * by fixing any violated Red Black Tree invariations.
+ * Return the size how big the tree grew after this insert operation,
+ * e.g. the size of the new kv pair if the key did not exists yet in the tree,
+ * or the size difference between the new values.
 */
-void node::insert(rb_entry new_pair) {
-    node* inserted = insert_node(std::move(new_pair));
-    inserted->fix_insert();
+int64_t node::insert(const rb_entry& new_pair) {
+    //node* inserted = insert_node(new_pair);
+    std::pair<int64_t, node*> res = insert_node(new_pair);
+    res.second->fix_insert();
     color = BLACK;
+    return res.first;
 }
 
 /**
@@ -104,10 +109,11 @@ void node::insert(rb_entry new_pair) {
  * using a standard binary search tree insertion.
  * Return a pointer to inserted node.
  */
-node* node::insert_node(const rb_entry& new_pair) {
+std::pair<int64_t, node*> node::insert_node(const rb_entry& new_pair) {
     if (new_pair == pair) {
+        int64_t size_diff{(int64_t) pair.size() - (int64_t) new_pair.size()};
         pair = new_pair;
-        return this;
+        return {size_diff, this};
     }
 
     if (new_pair < pair) {
@@ -115,8 +121,8 @@ node* node::insert_node(const rb_entry& new_pair) {
             node* left_child = new node(new_pair);
             left_child->parent = this;
             left = left_child;
-            return left_child;
-        } 
+            return {new_pair.size(), left_child};
+        }
         return left->insert_node(new_pair);
     }
 
@@ -124,7 +130,7 @@ node* node::insert_node(const rb_entry& new_pair) {
         node* right_child = new node(new_pair);
         right_child->parent = this;
         right = right_child;
-        return right_child;
+        return {new_pair.size(), right_child};
     } 
     return right->insert_node(new_pair);
 }
@@ -181,17 +187,11 @@ void node::fix_insert() {
 }
 
 /**
- * Remove a key value pair in the tree.
- * First do a binary search to find the node to actually delete but only return the position.
+ * Remove a node in the tree.
  * Do the actual deletion while fixing the tree.
  * Returns if the whole tree got deleted.
 */
-bool node::remove(const rb_entry& target) {
-    node* to_remove = find_node(target);
-    if (to_remove == nullptr) {
-        return false;
-    }
-
+bool node::remove(node* to_remove) {
     // If to_remove has both children, we swap it with its inorder successor
     // which is a leaf and thus must have 0 or 1 children.
     if (to_remove->left != nullptr && to_remove->right != nullptr) {
@@ -248,13 +248,12 @@ void node::remove_node() {
         return;
     }
 
-    node* sibling = nullptr;
     node* curr = this;
     curr->color = DOUBLE_BLACK;
 
     while (curr->parent != nullptr && curr->color == DOUBLE_BLACK) {
         if (curr == curr->parent->left) {
-            sibling = curr->parent->right;
+            node* sibling = curr->parent->right;
 
             if (get_color(sibling) == RED) {
                 sibling->color = BLACK;
@@ -286,7 +285,7 @@ void node::remove_node() {
                 }
             }
         } else {
-            sibling = curr->parent->left;
+            node* sibling = curr->parent->left;
 
             if (get_color(sibling) == RED) {
                 sibling->color = BLACK;

@@ -235,7 +235,7 @@ std::pair<uint16_t, std::list<std::pair<uint32_t, std::vector<level>>>>
         largest_id = std::max((uint16_t) std::stoul(filename.substr(0, 5)), largest_id);
         uint16_t level_order = std::stoi(filename.substr(6, 5));
 
-        level sst = level(segment_path, memtable_size * (level_order + 1));
+        level sst = level(segment_path, (long) memtable_size * (level_order + 1));
 
         if (cache.contains(level_order)) {
             cache[level_order].push_back(sst);

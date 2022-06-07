@@ -99,9 +99,9 @@ void command_loop(lsm_tree& db) {
 }
 
 int main() {
-    //test_red_black_tree();
-    lsm_tree db;
-    command_loop(db);
+    test_red_black_tree();
+    //lsm_tree db;
+    //command_loop(db);
 
     return 0;
 }

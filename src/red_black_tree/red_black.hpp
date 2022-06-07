@@ -11,7 +11,6 @@
 class red_black_tree {
 
     public:
-        uint64_t size;
 
         red_black_tree();
 
@@ -33,9 +32,12 @@ class red_black_tree {
 
         std::vector<rb_entry> get_and_delete_all_nodes();
 
+        uint64_t size() const;
+
         void print() const;
 
     private:
+        uint64_t byte_size;
         node* root;
 
         void insert(const rb_entry& data);

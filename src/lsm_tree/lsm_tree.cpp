@@ -15,7 +15,7 @@ lsm_tree::~lsm_tree() = default;
  * 3. Insert into memtable.
  */
 void lsm_tree::put(const std::string& key, const std::string& value) {
-    if (memtable.size >= MEMTABLE_SIZE) {
+    if (memtable.size() >= MEMTABLE_SIZE) {
         compact();
         std::cout << "FINISHED COMPACTION" << std::endl;
         flush_memtable_to_disk();
@@ -73,8 +73,7 @@ void lsm_tree::drop_table() {
  * order in a new segment file.
  */
 void lsm_tree::flush_memtable_to_disk() {
-    // TODO: Size stuff
-    level sst = level(get_new_segment_path(0), memtable.size, memtable);
+    level sst = level(get_new_segment_path(0), (long) memtable.size(), memtable);
     std::cout << "Created new SST" << std::endl;
 
     if (not segments.empty() and segments.front().first == 0) {
@@ -101,7 +100,7 @@ void lsm_tree::compact() {
             level sst_b = level_segments.back();
             level_segments.pop_back();
 
-            level merged = level(get_new_segment_path(curr_level + 1), sst_a, sst_b, memtable.size * (curr_level + 1) * 2);
+            level merged = level(get_new_segment_path(curr_level + 1), sst_a, sst_b, (long) memtable.size() * (curr_level + 1) * 2);
 
             sst_a.delete_segment_file();
             sst_b.delete_segment_file();
