@@ -62,8 +62,10 @@ void lsm_tree::remove(const std::string& key) {
  */
 void lsm_tree::drop_table() {
     memtable.delete_tree();
-    level::delete_all_segments(SEGMENT_BASE);
     wal.clear();
+
+    level::delete_all_segments(SEGMENT_BASE);
+    segments.clear();
 }
 
 /**
@@ -72,7 +74,7 @@ void lsm_tree::drop_table() {
  */
 void lsm_tree::flush_memtable_to_disk() {
     // TODO: Size stuff
-    level sst = level(get_new_segment_path(), memtable.size, memtable);
+    level sst = level(get_new_segment_path(0), memtable.size, memtable);
     std::cout << "Created new SST" << std::endl;
 
     if (not segments.empty() and segments.front().first == 0) {
@@ -99,7 +101,7 @@ void lsm_tree::compact() {
             level sst_b = level_segments.back();
             level_segments.pop_back();
 
-            level merged = level(get_new_segment_path(), sst_a, sst_b, memtable.size * (curr_level + 1) * 2);
+            level merged = level(get_new_segment_path(curr_level + 1), sst_a, sst_b, memtable.size * (curr_level + 1) * 2);
 
             sst_a.delete_segment_file();
             sst_b.delete_segment_file();
@@ -116,7 +118,9 @@ void lsm_tree::compact() {
 
 std::optional<std::string> lsm_tree::search_all_segments(const std::string& target) {
     for (const auto& curr_segment : segments) {
+        std::cout << "Search on level " << curr_segment.first << std::endl;
         for (const level& sst : curr_segment.second) {
+            std::cout << "Search segment " << sst.get_name() << std::endl;
             std::optional<std::string> val = sst.search(target);
             if (val.has_value()) {
                 return val;
@@ -128,8 +132,7 @@ std::optional<std::string> lsm_tree::search_all_segments(const std::string& targ
 }
 
 /**
- * Restore the in-memory tree, the bloom filter, the sparse index,
- * and all the segments after restarting the db
+ * Restore the memtable and the SSTs after restarting the db.
  */
 void lsm_tree::restore_db() {
     restore_memtable();
@@ -140,7 +143,6 @@ void lsm_tree::restore_db() {
  * Restore a memtable from its WAL. 
  */
 void lsm_tree::restore_memtable() {
-    std::cout << "Restore memtable" << std::endl;
     wal.repopulate_memtable(memtable);
 }
 
@@ -148,12 +150,14 @@ void lsm_tree::restore_memtable() {
  * Restore all segment files from disk.
  */
 void lsm_tree::restore_segments() {
-
+    auto last_segment_i_and_segments = level::collect_levels(SEGMENT_BASE, MEMTABLE_SIZE);
+    segment_i = last_segment_i_and_segments.first + 1;
+    segments = last_segment_i_and_segments.second;
 }
 
 /*
  * Create a new unique segment path.
  */
-std::string lsm_tree::get_new_segment_path() {
-    return SEGMENT_BASE + std::to_string(segment_i++) + ".segment";
+std::string lsm_tree::get_new_segment_path(uint16_t level_order) {
+    return SEGMENT_BASE + level::create_filename_based_on_level(segment_i++, level_order) + ".segment";
 }

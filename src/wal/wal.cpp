@@ -17,7 +17,7 @@ void write_ahead_log::clear() {
     std::filesystem::resize_file(filename, 0);
 }
 
-void write_ahead_log::repopulate_memtable(red_black_tree& memtable) {
+void write_ahead_log::repopulate_memtable(red_black_tree& memtable) const {
     std::ifstream wal_tmp;
     wal_tmp.open(filename);
 

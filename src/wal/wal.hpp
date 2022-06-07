@@ -19,7 +19,7 @@ class write_ahead_log {
 
         void clear();
 
-        void repopulate_memtable(red_black_tree& memtable);
+        void repopulate_memtable(red_black_tree& memtable) const;
 
     private:
         std::string filename;

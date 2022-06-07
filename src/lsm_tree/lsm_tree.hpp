@@ -35,7 +35,7 @@ class lsm_tree {
         red_black_tree memtable;
         std::list<std::pair<uint32_t, std::vector<level>>> segments;
         write_ahead_log wal;
-        int64_t segment_i{0};
+        uint16_t segment_i{0};
 
         void flush_memtable_to_disk();
 
@@ -49,7 +49,7 @@ class lsm_tree {
 
         std::optional<std::string> search_all_segments(const std::string& target);
 
-        std::string get_new_segment_path();
+        std::string get_new_segment_path(uint16_t level_order);
 };
 
 #endif // LSM_TREE_H

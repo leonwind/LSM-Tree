@@ -16,15 +16,22 @@ class level {
 
         level(const std::string &path, level &sst_a, level &sst_b, long bloom_size);
 
+        level(const std::string &path, long bloom_size);
+
         ~level() = default;
 
         std::optional<std::string> search(const std::string& target) const;
+
+        static std::string create_filename_based_on_level(uint16_t id, uint16_t level_order);
+
+        static std::pair<uint16_t, std::list<std::pair<uint32_t, std::vector<level>>>>
+            collect_levels(const std::string& path, uint64_t memtable_size);
 
         void delete_segment_file();
 
         static void delete_all_segments(const std::string& path);
 
-        std::string get_name();
+        std::string get_name() const;
 
     protected:
         std::queue<kv_pair> get_kv_pairs() const;
@@ -39,6 +46,8 @@ class level {
         void create_sst_from_memtable(red_black_tree& memtable);
 
         void merge_sst_values(const level& sst_a, const level& sst_b);
+
+        void repopulate_bloom_and_index();
 
         static void print_queue(std::queue<kv_pair> queue1);
 };

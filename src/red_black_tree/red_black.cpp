@@ -17,6 +17,9 @@ void red_black_tree::delete_tree() {
     if (root != nullptr) {
         root->delete_tree();
     }
+
+    root = nullptr;
+    size = 0;
 }
 
 // Insert method for the Memtable RB tree
