@@ -9,7 +9,7 @@ write_ahead_log::~write_ahead_log() = default;
 
 void write_ahead_log::append(const std::string& content) {
     if (wal_file.is_open()) {
-        wal_file << content << std::flush;
+        wal_file << content;
     }
 }
 

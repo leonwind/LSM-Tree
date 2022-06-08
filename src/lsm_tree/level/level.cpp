@@ -17,7 +17,7 @@ level::level(const std::string &path, long bloom_size, red_black_tree &memtable)
 /**
  * Merge two existing SSTs into a new one.
  */
-level::level(const std::string &path, level &sst_a, level &sst_b, long bloom_size)
+level::level(const std::string &path, level* sst_a, level* sst_b, long bloom_size)
         : bloom(bloom_size), index() {
     this->path = path;
     merge_sst_values(sst_a, sst_b);
@@ -31,6 +31,11 @@ level::level(const std::string& path, long bloom_size)
         : bloom(bloom_size), index() {
     this->path = path;
     repopulate_bloom_and_index();
+}
+
+level::~level() {
+    index.delete_tree();
+    delete_segment_file();
 }
 
 std::string level::get_name() const {
@@ -75,13 +80,14 @@ void level::create_sst_from_memtable(red_black_tree &memtable) {
         bloom.set(pair.key);
 
         std::string log_entry = pair.to_log_entry();
-        sst << log_entry << std::flush;
+        sst << log_entry;
 
         if (sparsity_i++ == SPARSITY_FACTOR) {
             index.insert(pair);
             sparsity_i = 0;
         }
     }
+    sst << std::flush;
 }
 
 /**
@@ -133,14 +139,14 @@ std::optional<std::string> level::search(const std::string &target) const {
  * Merge two Sorted String Tables and write them sorted to the disk.
  * Remove duplicated or deleted objects.
  */
-void level::merge_sst_values(level &sst_a, level &sst_b) {
+void level::merge_sst_values(level* sst_a, level* sst_b) {
     // SST_a is always the latest SST and dominates over SST_b.
-    if (extract_id_level_from_path(sst_a.path).first < extract_id_level_from_path(sst_b.path).first) {
+    if (extract_id_level_from_path(sst_a->path).first < extract_id_level_from_path(sst_b->path).first) {
         std::swap(sst_a, sst_b);
     }
 
-    std::ifstream sst_a_file(sst_a.path, std::ios_base::in);
-    std::ifstream sst_b_file(sst_b.path, std::ios_base::in);
+    std::ifstream sst_a_file(sst_a->path, std::ios_base::in);
+    std::ifstream sst_b_file(sst_b->path, std::ios_base::in);
 
     std::ofstream merged_sst;
     merged_sst.open(path);
@@ -197,19 +203,17 @@ void level::merge_sst_values(level &sst_a, level &sst_b) {
             last_key = min_kv_pair.key;
         }
 
-        std::cout << "NEXT PAIR: " << min_kv_pair.to_log_entry();
+        //std::cout << "NEXT PAIR: " << min_kv_pair.to_log_entry();
         bloom.set(min_kv_pair.key);
 
         if (sparsity_i++ == SPARSITY_FACTOR) {
-            std::cout << "Insert into Index" << std::endl;
             index.insert(min_kv_pair);
             sparsity_i = 0;
         }
 
-        merged_sst << min_kv_pair.to_log_entry() << std::flush;
+        merged_sst << min_kv_pair.to_log_entry();
     }
-
-    std::cout << "Finished merging" << std::endl;
+    merged_sst << std::flush;
 }
 
 /**
@@ -238,10 +242,10 @@ void level::repopulate_bloom_and_index() {
  * Retrieve the level of its segment based on the filename.
  * Return the segment and the largest ID.
  */
-std::pair<uint16_t, std::list<std::pair<uint32_t, std::vector<level>>>>
+std::pair<uint16_t, std::list<std::pair<uint32_t, std::vector<level*>>>>
     level::collect_levels(const std::string &path, uint64_t memtable_size) {
 
-    std::map<uint32_t, std::vector<level>> cache;
+    std::map<uint16_t, std::vector<level*>> cache{};
 
     uint16_t largest_id{0};
 
@@ -252,7 +256,7 @@ std::pair<uint16_t, std::list<std::pair<uint32_t, std::vector<level>>>>
         largest_id = std::max(largest_id, id_level.first);
         uint16_t level_order = id_level.second;
 
-        level sst = level(segment_path, (long) memtable_size * (level_order + 1));
+        auto* sst = new level(segment_path, (long) memtable_size * (level_order + 1));
 
         if (cache.contains(level_order)) {
             cache[level_order].push_back(sst);
@@ -261,7 +265,7 @@ std::pair<uint16_t, std::list<std::pair<uint32_t, std::vector<level>>>>
         }
     }
 
-    std::list<std::pair<uint32_t, std::vector<level>>> segments;
+    std::list<std::pair<uint32_t, std::vector<level*>>> segments;
     for (const auto& sst : cache) {
         segments.emplace_back(sst);
     }
@@ -277,12 +281,3 @@ void level::delete_all_segments(const std::string &path) {
     for (const auto& entry : std::filesystem::directory_iterator(path))
         std::filesystem::remove_all(entry.path());
 }
-
-void level::print_queue(std::queue<kv_pair> q) {
-    while (not q.empty()) {
-        auto curr = q.front();
-        q.pop();
-        std::cout << curr.to_log_entry();
-    }
-}
-

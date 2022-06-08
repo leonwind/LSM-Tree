@@ -3,6 +3,7 @@
 #include "red_black_tree/red_black.hpp"
 #include "utils/types.hpp"
 #include <iostream>
+#include <chrono>
 
 void test_bloom_filter() {
     bloom_filter bloom(100);
@@ -32,6 +33,21 @@ void test_red_black_tree() {
     rb_tree.remove("8");
     rb_tree.remove("17");
     rb_tree.print();
+}
+
+void benchmark() {
+    lsm_tree db;
+    db.drop_table();
+    std::cout << "START BENCHMARK" << std::endl;
+
+    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+    for (int i = 0; i < 1000000; ++i) {
+        std::string s = std::to_string(i);
+        db.put(s, s);
+    }
+
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+    std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
 }
 
 enum commands {
@@ -103,7 +119,8 @@ void command_loop() {
 
 int main() {
     //test_red_black_tree();
-    command_loop();
+    //command_loop();
+    benchmark();
 
     return 0;
 }
