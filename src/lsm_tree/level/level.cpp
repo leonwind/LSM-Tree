@@ -73,6 +73,7 @@ void level::create_sst_from_memtable(red_black_tree &memtable) {
     sst.open(path);
 
     uint64_t sparsity_i{0};
+    uint64_t pos{0};
 
     std::vector<rb_entry> rb_nodes = memtable.get_and_delete_all_nodes();
     for (rb_entry& node : rb_nodes) {
@@ -83,9 +84,11 @@ void level::create_sst_from_memtable(red_black_tree &memtable) {
         sst << log_entry;
 
         if (sparsity_i++ == SPARSITY_FACTOR) {
-            index.insert(pair);
+            index.insert(rb_entry{pair.key, pos});
             sparsity_i = 0;
         }
+
+        pos += log_entry.size();
     }
     sst << std::flush;
 }
@@ -108,7 +111,7 @@ std::optional<std::string> level::search(const std::string &target) const {
     long start_pos{0};
 
     if (opt_floor_node.has_value()) {
-        start_pos = std::any_cast<long>(opt_floor_node.value());
+        start_pos = (long) std::any_cast<uint64_t>(opt_floor_node.value().val.value());
     }
 
     std::ifstream sst(path, std::ios_base::in);
@@ -153,6 +156,7 @@ void level::merge_sst_values(level* sst_a, level* sst_b) {
 
     std::string last_key;
     uint64_t sparsity_i{0};
+    uint64_t pos{0};
 
     std::string line_a, line_b;
     kv_pair kv_pair_a, kv_pair_b;
@@ -207,11 +211,14 @@ void level::merge_sst_values(level* sst_a, level* sst_b) {
         bloom.set(min_kv_pair.key);
 
         if (sparsity_i++ == SPARSITY_FACTOR) {
-            index.insert(min_kv_pair);
+            index.insert(rb_entry{min_kv_pair.key, pos});
             sparsity_i = 0;
         }
 
-        merged_sst << min_kv_pair.to_log_entry();
+        std::string log_entry = min_kv_pair.to_log_entry();
+        merged_sst << log_entry;
+
+        pos += log_entry.size();
     }
     merged_sst << std::flush;
 }
@@ -224,15 +231,18 @@ void level::repopulate_bloom_and_index() {
     std::string line;
 
     uint64_t sparsity_i{0};
+    uint64_t pos{0};
 
     while (std::getline(sst_file, line)) {
         kv_pair curr_pair = kv_pair::split_log_entry(line);
         bloom.set(curr_pair.key);
 
         if (sparsity_i++ == SPARSITY_FACTOR) {
-            index.insert(curr_pair);
+            index.insert(rb_entry{curr_pair.key, pos});
             sparsity_i = 0;
         }
+
+        pos += line.size();
     }
 }
 
@@ -256,7 +266,7 @@ std::pair<uint16_t, std::list<std::pair<uint32_t, std::vector<level*>>>>
         largest_id = std::max(largest_id, id_level.first);
         uint16_t level_order = id_level.second;
 
-        auto* sst = new level(segment_path, (long) memtable_size * (level_order + 1));
+        auto* sst = new level(segment_path, (long) memtable_size * (level_order + 1) * 2);
 
         if (cache.contains(level_order)) {
             cache[level_order].push_back(sst);

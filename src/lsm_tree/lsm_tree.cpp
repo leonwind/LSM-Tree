@@ -125,9 +125,9 @@ void lsm_tree::compact() {
 
 std::optional<std::string> lsm_tree::search_all_segments(const std::string& target) {
     for (const auto& curr_segment : segments) {
-        std::cout << "Search on level " << curr_segment.first << std::endl;
+        //std::cout << "Search on level " << curr_segment.first << std::endl;
         for (const level* sst : curr_segment.second) {
-            std::cout << "Search segment " << sst->get_name() << std::endl;
+            //std::cout << "Search segment " << sst->get_name() << std::endl;
             std::optional<std::string> val = sst->search(target);
             if (val.has_value()) {
                 return val;

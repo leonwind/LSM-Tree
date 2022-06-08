@@ -20,6 +20,8 @@ class red_black_tree {
 
         void insert(kv_pair new_pair);
 
+        void insert(const rb_entry& data);
+
         void remove(const std::string& target);
 
         bool exists(std::string target) const;
@@ -39,8 +41,6 @@ class red_black_tree {
     private:
         uint64_t byte_size;
         node* root;
-
-        void insert(const rb_entry& data);
 };
 
 #endif // RED_BLACK_H

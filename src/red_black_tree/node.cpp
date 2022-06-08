@@ -85,7 +85,10 @@ node* node::floor(const rb_entry& target) {
         }
     }
 
-    return this;
+    if (pair <= target) {
+        return this;
+    }
+    return nullptr;
 }
 
 /**

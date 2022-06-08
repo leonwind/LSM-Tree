@@ -36,7 +36,7 @@ class level {
         std::string get_name() const;
 
     private:
-        static const uint64_t SPARSITY_FACTOR{1000};
+        static const uint64_t SPARSITY_FACTOR{100};
 
         std::string path;
         bloom_filter bloom;

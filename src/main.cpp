@@ -36,17 +36,32 @@ void test_red_black_tree() {
 }
 
 void benchmark() {
+    size_t num_elements = 100000;
     lsm_tree db;
     db.drop_table();
-    std::cout << "START BENCHMARK" << std::endl;
+
+    std::cout << "START BENCHMARK INSERT" << std::endl;
 
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-    for (int i = 0; i < 1000000; ++i) {
+    for (size_t i = 0; i < num_elements; ++i) {
         std::string s = std::to_string(i);
         db.put(s, s);
     }
-
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+    std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
+
+    std::cout << "START BENCHMARK GET" << std::endl;
+    begin = std::chrono::steady_clock::now();
+    for (size_t i = 0; i < num_elements; ++i) {
+        std::string s = std::to_string(i);
+        std::string res = db.get(s);
+        if (s != res) {
+            std::cout << "ERROR ERROR: " << s << " != " << res << std::endl;
+            break;
+        }
+    }
+
+    end = std::chrono::steady_clock::now();
     std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
 }
 
