@@ -52,12 +52,13 @@ commands cmd_to_enum(const std::string& in_str) {
     return NONE;
 }
 
-void command_loop(lsm_tree& db) {
+void command_loop() {
+    lsm_tree db;
     bool run = true;
+
     std::string command;
     std::string key, value;
 
-    //db.drop_table();
     while (run) {
         std::cout << "> ";
         std::cin >> command;
@@ -65,8 +66,10 @@ void command_loop(lsm_tree& db) {
         switch(cmd_to_enum(command)) {
             case PUT:
                 std::cin >> key >> value;
-                if (value.empty()) {
-                    std::cout << "Value can not be empty" << std::endl;
+                if (key.empty()) {
+                    std::cout << "Key can not be empty." << std::endl;
+                } else if (value.empty()) {
+                    std::cout << "Value can not be empty." << std::endl;
                 } else {
                     db.put(key, value);
                 }
@@ -99,9 +102,8 @@ void command_loop(lsm_tree& db) {
 }
 
 int main() {
-    test_red_black_tree();
-    //lsm_tree db;
-    //command_loop(db);
+    //test_red_black_tree();
+    command_loop();
 
     return 0;
 }
