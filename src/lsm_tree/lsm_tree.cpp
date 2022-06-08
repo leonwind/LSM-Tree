@@ -66,6 +66,7 @@ void lsm_tree::drop_table() {
 
     level::delete_all_segments(SEGMENT_BASE);
     segments.clear();
+    segment_i = 0;
 }
 
 /**

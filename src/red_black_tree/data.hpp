@@ -48,7 +48,7 @@ struct rb_entry {
 
     std::strong_ordering operator<=>(const rb_entry& other) const {
         if (key == other.key) {
-            return std::strong_ordering::equivalent;
+            return std::strong_ordering::equal;
         }
 
         if (key < other.key) {

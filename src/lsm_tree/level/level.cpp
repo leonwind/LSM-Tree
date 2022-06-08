@@ -49,6 +49,15 @@ std::string level::create_filename_based_on_level(uint16_t id, uint16_t level_or
     return ss.str();
 }
 
+std::pair<uint16_t, uint16_t> level::extract_id_level_from_path(const std::string& path) {
+    std::string filename = path.substr(path.find_last_of("/\\") + 1);
+
+    uint16_t id = (uint16_t) std::stoul(filename.substr(0, 5));
+    uint16_t level_order = std::stoi(filename.substr(6, 5));
+
+    return {id, level_order};
+}
+
 /**
  * Get all nodes from memtable in-order and write them to the disk.
  * Populate the bloom filter and insert every SPARSITY_INDEX'th node inside
@@ -121,92 +130,101 @@ std::optional<std::string> level::search(const std::string &target) const {
 }
 
 /**
- * Iterate over both files and merge them inside a queue
- * TODO: Merge without storing them in-memory and use iterator over both SSTs.
- */
-std::queue<kv_pair> level::get_kv_pairs() const {
-    std::queue<kv_pair> kv_pairs{};
-    std::ifstream sst(path, std::ios_base::in);
-
-    if (not sst.is_open()) {
-        return {};
-    }
-
-    std::string line;
-
-    while (std::getline(sst, line)) {
-        size_t seperator_pos = line.find(SEPERATOR);
-        std::string key = line.substr(0, seperator_pos);
-        std::string value = line.substr(seperator_pos + 1, line.size() - seperator_pos);
-
-        kv_pairs.push({key, value});
-    }
-
-    return kv_pairs;
-}
-
-/**
  * Merge two Sorted String Tables and write them sorted to the disk.
+ * Remove duplicated or deleted objects.
  */
-void level::merge_sst_values(const level& sst_a, const level& sst_b) {
-    std::cout << "Start merging " << sst_a.path << " with "
-        << sst_b.path << " to file " << path << std::endl;
+void level::merge_sst_values(level &sst_a, level &sst_b) {
+    // SST_a is always the latest SST and dominates over SST_b.
+    if (extract_id_level_from_path(sst_a.path).first < extract_id_level_from_path(sst_b.path).first) {
+        std::swap(sst_a, sst_b);
+    }
 
-    auto queue_a = sst_a.get_kv_pairs();
-    auto queue_b = sst_b.get_kv_pairs();
+    std::ifstream sst_a_file(sst_a.path, std::ios_base::in);
+    std::ifstream sst_b_file(sst_b.path, std::ios_base::in);
 
-    std::ofstream sst;
-    sst.open(path);
+    std::ofstream merged_sst;
+    merged_sst.open(path);
 
-    uint64_t sparsity_i{0};
     std::string last_key;
+    uint64_t sparsity_i{0};
 
-    while ((not queue_a.empty()) or (not queue_b.empty())) {
+    std::string line_a, line_b;
+    kv_pair kv_pair_a, kv_pair_b;
+    kv_pair min_kv_pair;
 
-        kv_pair next_pair;
-        if (not queue_a.empty() and (queue_b.empty() or queue_a.front() < queue_b.front())) {
-            next_pair = kv_pair{queue_a.front()};
-            queue_a.pop();
-        } else {
-            next_pair = kv_pair{queue_b.front()};
-            queue_b.pop();
+    bool sst_a_empty = false;
+    bool sst_b_empty = false;
+
+    while (true) {
+
+        if (line_a.empty() and not sst_a_empty) {
+            std::getline(sst_a_file, line_a);
+            sst_a_empty = line_a.empty();
+
+            kv_pair_a = kv_pair::split_log_entry(line_a);
         }
 
-        // If we had this key earlier, we take the latest value which is the earlier
-        // kv pair.
-        if (last_key == next_pair.key) {
+        if (line_b.empty() and not sst_b_empty) {
+            std::getline(sst_b_file, line_b);
+            sst_b_empty = line_b.empty();
+
+            kv_pair_b = kv_pair::split_log_entry(line_b);
+        }
+
+        if (kv_pair_a.empty() and kv_pair_b.empty()) {
+            break;
+        }
+
+        if (kv_pair_a.empty() and not kv_pair_b.empty()) {
+            min_kv_pair = kv_pair_b;
+            line_b.clear();
+        } else if (not kv_pair_a.empty() and kv_pair_b.empty()) {
+            min_kv_pair = kv_pair_a;
+            line_a.clear();
+        } else {
+            if (kv_pair_a <= kv_pair_b) {
+                min_kv_pair = kv_pair_a;
+                line_a.clear();
+            } else {
+                min_kv_pair = kv_pair_b;
+                line_b.clear();
+            }
+        }
+
+        if (last_key == min_kv_pair.key) {
             continue;
         } else {
-            last_key = next_pair.key;
+            last_key = min_kv_pair.key;
         }
 
-        std::cout << "NEXT PAIR: " << next_pair.to_log_entry();
-        bloom.set(next_pair.key);
+        std::cout << "NEXT PAIR: " << min_kv_pair.to_log_entry();
+        bloom.set(min_kv_pair.key);
 
         if (sparsity_i++ == SPARSITY_FACTOR) {
             std::cout << "Insert into Index" << std::endl;
-            index.insert(next_pair);
+            index.insert(min_kv_pair);
             sparsity_i = 0;
         }
 
-        sst << next_pair.to_log_entry() << std::flush;
+        merged_sst << min_kv_pair.to_log_entry() << std::flush;
     }
 
     std::cout << "Finished merging" << std::endl;
 }
 
 /**
- * Iterate over the SST and populate the bloom filter and the Sparse Index.
+ * Iterate over the SST and repopulate the bloom filter and the Sparse Index.
  */
 void level::repopulate_bloom_and_index() {
-    auto kv_pairs = get_kv_pairs();
+    std::ifstream sst_file(path, std::ios_base::in);
+    std::string line;
+
     uint64_t sparsity_i{0};
 
-    while(not kv_pairs.empty()) {
-        kv_pair curr_pair = kv_pairs.front();
-        kv_pairs.pop();
-
+    while (std::getline(sst_file, line)) {
+        kv_pair curr_pair = kv_pair::split_log_entry(line);
         bloom.set(curr_pair.key);
+
         if (sparsity_i++ == SPARSITY_FACTOR) {
             index.insert(curr_pair);
             sparsity_i = 0;
@@ -229,11 +247,10 @@ std::pair<uint16_t, std::list<std::pair<uint32_t, std::vector<level>>>>
 
     for (const auto& segment_file : std::filesystem::directory_iterator(path)) {
         std::string segment_path = segment_file.path().string();
-        std::string filename = segment_path.substr(path.find_last_of("/\\") + 1);
+        auto id_level = extract_id_level_from_path(segment_path);
 
-        // id and level_order is always 00001_00001 (id_level)
-        largest_id = std::max((uint16_t) std::stoul(filename.substr(0, 5)), largest_id);
-        uint16_t level_order = std::stoi(filename.substr(6, 5));
+        largest_id = std::max(largest_id, id_level.first);
+        uint16_t level_order = id_level.second;
 
         level sst = level(segment_path, (long) memtable_size * (level_order + 1));
 
@@ -268,3 +285,4 @@ void level::print_queue(std::queue<kv_pair> q) {
         std::cout << curr.to_log_entry();
     }
 }
+
