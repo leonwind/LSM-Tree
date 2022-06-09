@@ -10,7 +10,7 @@ namespace lsm_tree_benchmarks {
             auto *db = new lsm_tree();
             db->drop_table();
 
-            std::cout << "START SEQUENTIAL WRITES BENCHMARK" << std::endl;
+            std::cout << "LSM-TREE SEQUENTIAL WRITES: ";
 
             std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
             for (size_t i = 0; i < num_elements; ++i) {
@@ -19,15 +19,14 @@ namespace lsm_tree_benchmarks {
             }
 
             std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-            std::cout << "Time difference = "
-                      << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count()
+            std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count()
                       << "[ms]" << std::endl;
 
             return db;
         }
 
         void sequential_reads(lsm_tree *db, size_t num_elements) {
-            std::cout << "START SEQUENTIAL READS BENCHMARK" << std::endl;
+            std::cout << "LSM-TREE SEQUENTIAL READS: ";
 
             std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
             for (size_t i = 0; i < num_elements; ++i) {
@@ -35,8 +34,7 @@ namespace lsm_tree_benchmarks {
             }
 
             std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-            std::cout << "Time difference = "
-                      << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count()
+            std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count()
                       << "[ms]" << std::endl;
 
             delete(db);
@@ -50,7 +48,7 @@ namespace lsm_tree_benchmarks {
             std::mt19937 gen(rd());
             std::uniform_int_distribution<> distr(0, (int) num_elements);
 
-            std::cout << "START RANDOM WRITES BENCHMARK" << std::endl;
+            std::cout << "LSM-TREE RANDOM WRITES: ";
 
             std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
             for (size_t i = 0; i < num_elements; ++i) {
@@ -59,8 +57,7 @@ namespace lsm_tree_benchmarks {
             }
 
             std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-            std::cout << "Time difference = "
-                      << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count()
+            std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count()
                       << "[ms]" << std::endl;
 
             return db;
@@ -72,7 +69,7 @@ namespace lsm_tree_benchmarks {
             std::mt19937 gen(rd());
             std::uniform_int_distribution<> distr(0, (int) num_elements);
 
-            std::cout << "START RANDOM READS BENCHMARK" << std::endl;
+            std::cout << "LSM-TREE RANDOM READS: ";
 
             std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
             for (size_t i = 0; i < num_elements; ++i) {
@@ -80,8 +77,7 @@ namespace lsm_tree_benchmarks {
             }
 
             std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-            std::cout << "Time difference = "
-                      << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count()
+            std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count()
                       << "[ms]" << std::endl;
 
             delete(db);
@@ -97,4 +93,5 @@ namespace lsm_tree_benchmarks {
         db = random_writes(num_elements);
         random_reads(db, num_elements);
     }
-}
+
+} // namespace lsm_tree_benchmarks

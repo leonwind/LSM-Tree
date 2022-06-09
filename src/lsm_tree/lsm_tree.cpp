@@ -6,7 +6,7 @@ lsm_tree::lsm_tree(): memtable(), wal(WAL_PATH) {
 
 lsm_tree::~lsm_tree() {
     drop_table();
-};
+}
 
 /**
  * Insert a new kv-pair into the database:

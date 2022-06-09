@@ -1,69 +1,4 @@
 #include "src/lsm_tree/lsm_tree.hpp"
-#include "src/bloom_filter/bloom.hpp"
-#include "src/red_black_tree/red_black.hpp"
-#include "src/utils/types.hpp"
-#include <iostream>
-#include <chrono>
-
-void test_bloom_filter() {
-    bloom_filter bloom(100);
-
-    bloom.set("test");
-    std::cout << bloom.is_set("test") << std::endl;
-    std::cout << bloom.is_set("non test") << std::endl;
-
-    bloom.set("non test");
-    std::cout << bloom.is_set("non test") << std::endl;
-
-}
-
-void test_red_black_tree() {
-    red_black_tree rb_tree;
-
-    rb_tree.insert(kv_pair{"8", ""});
-    rb_tree.insert(kv_pair{"18", ""});
-    rb_tree.insert(kv_pair{"5", ""});
-    rb_tree.insert(kv_pair{"15", ""});
-    rb_tree.insert(kv_pair{"17", ""});
-    rb_tree.insert(kv_pair{"25", ""});
-    rb_tree.insert(kv_pair{"40", ""});
-    rb_tree.insert(kv_pair{"80", ""});
-    rb_tree.insert(kv_pair{"19", ""});
-    rb_tree.remove("25");
-    rb_tree.remove("8");
-    rb_tree.remove("17");
-    rb_tree.print();
-}
-
-void benchmark() {
-    size_t num_elements = 100000000;
-    lsm_tree db;
-    db.drop_table();
-
-    std::cout << "START BENCHMARK INSERT" << std::endl;
-
-    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-    for (size_t i = 0; i < num_elements; ++i) {
-        std::string s = std::to_string(i);
-        db.put(s, s);
-    }
-    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-    std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
-
-    std::cout << "START BENCHMARK GET" << std::endl;
-    begin = std::chrono::steady_clock::now();
-    for (size_t i = 0; i < num_elements; ++i) {
-        std::string s = std::to_string(i);
-        std::string res = db.get(s);
-        if (s != res) {
-            std::cout << "ERROR ERROR: " << s << " != " << res << std::endl;
-            break;
-        }
-    }
-
-    end = std::chrono::steady_clock::now();
-    std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
-}
 
 enum commands {
     PUT,
@@ -133,8 +68,6 @@ void command_loop() {
 }
 
 int main() {
-    //test_red_black_tree();
-    //benchmark();
     command_loop();
 
     return 0;

@@ -7,5 +7,9 @@ Implementation of a simplistic Key-Value Store using a [Log-structured Merge-tre
 cd build/
 cmake ..
 make
-./src/kv_store
+./kv_store
 ```
+
+## Benchmarks
+The LSM-Tree got benchmarked against [RocksDB](https://github.com/facebook/rocksdb) by Facebook. You can run the benchmarks your self after compiling under `./build/benchmark/run_benchmarks`.
+The results are also visualized in [benchmark.ipynb](https://github.com/leonwind/LSM-Tree/blob/main/benchmark/benchmarks.ipynb).
