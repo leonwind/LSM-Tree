@@ -13,3 +13,8 @@ find_package(Boost 1.50 REQUIRED COMPONENTS filesystem)
 message(STATUS "Boost version: ${Boost_VERSION}")
 
 add_subdirectory(src)
+file(GLOB db_app kv_store.cpp)
+add_executable(kv_store ${db_app})
+target_link_libraries(kv_store lsm-tree)
+
+add_subdirectory(benchmark)

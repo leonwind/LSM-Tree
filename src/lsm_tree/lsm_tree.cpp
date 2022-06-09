@@ -4,7 +4,9 @@ lsm_tree::lsm_tree(): memtable(), wal(WAL_PATH) {
     restore_db();
 }
 
-lsm_tree::~lsm_tree() = default;
+lsm_tree::~lsm_tree() {
+    drop_table();
+};
 
 /**
  * Insert a new kv-pair into the database:
@@ -166,5 +168,5 @@ void lsm_tree::restore_segments() {
  * Create a new unique segment path.
  */
 std::string lsm_tree::get_new_segment_path(uint16_t level_order) {
-    return SEGMENT_BASE + level::create_filename_based_on_level(segment_i++, level_order) + ".segment";
+    return SEGMENT_BASE + level::create_filename_based_on_level(segment_i++, level_order) + ".sst";
 }

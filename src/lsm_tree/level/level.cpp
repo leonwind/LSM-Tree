@@ -124,8 +124,7 @@ std::optional<std::string> level::search(const std::string &target) const {
             key = line.substr(0, seperator_pos);
 
             if (target < key) {
-                // Since SST is sorted, we can stop when key is greater than
-                // target.
+                // Since SST is sorted, we can stop when key is greater than target.
                 return {};
             }
 

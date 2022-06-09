@@ -30,7 +30,8 @@ class lsm_tree {
         void drop_table();
 
     private:
-        static const uint64_t MEMTABLE_SIZE{100000};
+        static const uint64_t MEMTABLE_SIZE{67108864}; // 64 MBs
+
 
         red_black_tree memtable;
         std::list<std::pair<uint32_t, std::vector<level*>>> segments;

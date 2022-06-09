@@ -1,7 +1,7 @@
-#include "lsm_tree/lsm_tree.hpp"
-#include "bloom_filter/bloom.hpp"
-#include "red_black_tree/red_black.hpp"
-#include "utils/types.hpp"
+#include "src/lsm_tree/lsm_tree.hpp"
+#include "src/bloom_filter/bloom.hpp"
+#include "src/red_black_tree/red_black.hpp"
+#include "src/utils/types.hpp"
 #include <iostream>
 #include <chrono>
 
@@ -36,7 +36,7 @@ void test_red_black_tree() {
 }
 
 void benchmark() {
-    size_t num_elements = 100000;
+    size_t num_elements = 100000000;
     lsm_tree db;
     db.drop_table();
 
@@ -134,8 +134,8 @@ void command_loop() {
 
 int main() {
     //test_red_black_tree();
-    //command_loop();
-    benchmark();
+    //benchmark();
+    command_loop();
 
     return 0;
 }
