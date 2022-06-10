@@ -36,8 +36,6 @@ namespace lsm_tree_benchmarks {
             std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
             std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count()
                       << "[ms]" << std::endl;
-
-            delete(db);
         }
 
         lsm_tree *random_writes(size_t num_elements) {
@@ -79,19 +77,19 @@ namespace lsm_tree_benchmarks {
             std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
             std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count()
                       << "[ms]" << std::endl;
-
-            delete(db);
         }
-    }
+    } // namespace
 
     void run(size_t num_elements) {
         std::cout << "Start LSM Tree Benchmarks..." << std::endl;
 
         lsm_tree *db = sequential_writes(num_elements);
         sequential_reads(db, num_elements);
+        random_reads(db, num_elements);
+        delete(db);
 
         db = random_writes(num_elements);
-        random_reads(db, num_elements);
+        delete(db);
     }
 
 } // namespace lsm_tree_benchmarks

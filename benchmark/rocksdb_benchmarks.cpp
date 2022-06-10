@@ -52,8 +52,6 @@ namespace rocksdb_benchmarks {
             std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
             std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count()
                       << "[ms]" << std::endl;
-
-            delete(db);
         }
 
         rocksdb::DB *random_writes(size_t num_elements) {
@@ -80,7 +78,6 @@ namespace rocksdb_benchmarks {
 
         void random_reads(rocksdb::DB* db, size_t num_elements) {
             std::ofstream log;
-            log.open("LOG.log");
 
             std::random_device rd;
             std::mt19937 gen(rd());
@@ -91,28 +88,25 @@ namespace rocksdb_benchmarks {
 
             std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
             for (size_t i = 0; i < num_elements; ++i) {
-                if (i % 1000000 == 0) {
-                    log << "Curr i: " << i << "\n";
-                }
                 db->Get(rocksdb::ReadOptions(), std::to_string(distr(gen)), &value);
             }
 
             std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
             std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count()
                       << "[ms]" << std::endl;
-
-            delete(db);
         }
-    }
+    } // namespace
 
     void run(size_t num_elements) {
         std::cout << "Start RocksDB Benchmark..." << std::endl;
 
         rocksdb::DB *db = sequential_writes(num_elements);
         sequential_reads(db, num_elements);
+        random_reads(db, num_elements);
+        delete(db);
 
         db = random_writes(num_elements);
-        random_reads(db, num_elements);
+        delete(db);
     }
 
 } // namespace rocksdb_benchmarks
